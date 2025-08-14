@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIPGenie Blog – SIP Investment Tips, Guides & Strategies</title>
+  <meta name="description" content="Learn about SIP investing, wealth building strategies, and financial planning with our expert guides." />
+  <meta name="keywords" content="SIP blog, mutual fund SIP, SIP vs lumpsum, best SIP funds, SIP returns calculator, SIP step-up strategy" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; }
+    .max-w-7xl { max-width: 1280px; margin: auto; }
+    header { background: white; border-bottom: 1px solid #eee; padding: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    nav a { margin-left: 1rem; text-decoration: none; color: #333; font-weight: 500; }
+    nav a:hover { text-decoration: underline; }
+    footer { background: #fff; border-top: 1px solid #eee; padding: 2rem; text-align: center; color: #555; }
+    .grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s ease; }
+    .card:hover { transform: scale(1.03); }
+    .badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 9999px; }
+    .cta { background: linear-gradient(to right, hsl(162,100%,41%), hsl(207,90%,54%)); color: white; padding: 1rem 2rem; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER (Copied from homepage) -->
+  <header>
+    <div class="logo"><a href="/" style="text-decoration:none;color:#000;font-weight:bold;font-size:1.2rem;">SIPGenie</a></div>
+    <nav>
+      <a href="/">Calculator</a>
+      <a href="/compare">Compare</a>
+      <a href="/blog">Blog</a>
+    </nav>
+  </header>
+
+  <!-- BLOG HEADER -->
+  <section style="padding: 3rem 1rem; background: linear-gradient(to bottom right, hsla(162,100%,41%,0.05), hsla(207,90%,54%,0.05)); text-align: center;">
+    <div class="max-w-7xl">
+      <h1 style="font-size: 2.5rem; font-weight: bold; color: hsl(224,71.4%,4.1%); margin-bottom: 1rem;">SIP Investment Blog</h1>
+      <p style="font-size: 1.2rem; color: hsl(220,8.9%,46.1%); max-width: 700px; margin: auto;">
+        Learn about SIP investing, wealth building strategies, and financial planning with our expert guides.
+      </p>
+    </div>
+  </section>
+
+  <!-- BLOG CARDS -->
+  <section style="padding: 3rem 1rem;">
+    <div class="max-w-7xl grid">
+      <!-- Card 1 -->
+      <div class="card">
+        <h3>Best SIP Funds for 2025</h3>
+        <p>Discover top-performing SIP mutual funds for 2025 with detailed analysis, risk assessment, and expert recommendations.</p>
+        <span class="badge" style="background: hsla(162,100%,41%,0.1); color: hsl(162,100%,41%);">Investment</span>
+      </div>
+      <!-- Card 2 -->
+      <div class="card">
+        <h3>SIP vs Fixed Deposit: Which is Better?</h3>
+        <p>Complete comparison between SIP investments and Fixed Deposits with returns analysis, risk factors, and tax implications.</p>
+        <span class="badge" style="background: hsla(207,90%,54%,0.1); color: hsl(207,90%,54%);">Comparison</span>
+      </div>
+      <!-- Card 3 -->
+      <div class="card">
+        <h3>How to Make Money with SIPs</h3>
+        <p>Step-by-step guide to building wealth through systematic investment plans with practical tips and real examples.</p>
+        <span class="badge" style="background: rgba(128,0,128,0.1); color: purple;">Guide</span>
+      </div>
+      <!-- Card 4 -->
+      <div class="card">
+        <h3>SIP Tax Benefits You Should Know</h3>
+        <p>Understand tax saving opportunities with ELSS SIPs, Section 80C benefits, and long-term capital gains tax.</p>
+        <span class="badge" style="background: hsla(162,100%,41%,0.1); color: hsl(162,100%,41%);">Tax Planning</span>
+      </div>
+      <!-- Card 5 -->
+      <div class="card">
+        <h3>Common SIP Mistakes to Avoid</h3>
+        <p>Learn about the most common SIP investment mistakes and how to avoid them for better returns and financial growth.</p>
+        <span class="badge" style="background: hsla(207,90%,54%,0.1); color: hsl(207,90%,54%);">Tips</span>
+      </div>
+      <!-- Card 6 -->
+      <div class="card">
+        <h3>SIP for Retirement Planning</h3>
+        <p>Plan your retirement with SIPs - calculate corpus needed, choose right funds, and build a secure financial future.</p>
+        <span class="badge" style="background: rgba(128,0,128,0.1); color: purple;">Retirement</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALL TO ACTION -->
+  <section style="padding: 3rem 1rem; background: linear-gradient(to bottom right, hsla(162,100%,41%,0.05), hsla(207,90%,54%,0.05)); text-align: center;">
+    <h2 style="font-size: 2rem; font-weight: bold; color: hsl(224,71.4%,4.1%); margin-bottom: 1rem;">Ready to Start Your SIP Journey?</h2>
+    <p style="color: hsl(220,8.9%,46.1%); font-size: 1.1rem; max-width: 600px; margin: auto; margin-bottom: 2rem;">
+      Use our advanced SIP calculator to plan your investments and build wealth systematically.
+    </p>
+    <a href="/sip-calculator" class="cta">Start Calculating Now</a>
+  </section>
+
+  <!-- FOOTER (Copied from homepage) -->
+  <footer>
+    <p>© 2025 SIPGenie. All rights reserved.</p>
+    <p><a href="/privacy-policy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+  </footer>
+
+</body>
+</html>
