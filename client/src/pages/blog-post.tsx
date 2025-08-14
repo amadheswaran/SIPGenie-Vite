@@ -71,9 +71,9 @@ export default function BlogPost() {
   useEffect(() => {
     if (post) {
       document.title = `${post.title} — SIPGenie`;
-      const meta = document.querySelector('meta[name=\"description\"]');
+      const meta = document.querySelector('meta[name="description"]');
       if (meta) meta.setAttribute('content', post.excerpt);
-      const kw = document.querySelector('meta[name=\"keywords\"]');
+      const kw = document.querySelector('meta[name="keywords"]');
       if (kw) kw.setAttribute('content', ['SIP', 'SIP calculator', ...post.tags].join(', '));
     } else {
       document.title = 'Blog Post — SIPGenie';
@@ -82,11 +82,11 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div className=\"min-h-screen bg-[hsl(220,14.3%,97%)]\">
+      <div className="min-h-screen bg-[hsl(220,14.3%,97%)]">
         <Header />
-        <main className=\"max-w-4xl mx-auto p-8\">
-          <h2 className=\"text-2xl font-bold\">Post not found</h2>
-          <p className=\"mt-4\">The requested article does not exist.</p>
+        <main className="max-w-4xl mx-auto p-8">
+          <h2 className="text-2xl font-bold">Post not found</h2>
+          <p className="mt-4">The requested article does not exist.</p>
         </main>
         <Footer />
       </div>
@@ -94,17 +94,19 @@ export default function BlogPost() {
   }
 
   return (
-    <div className=\"min-h-screen bg-[hsl(220,14.3%,97%)]\">
+    <div className="min-h-screen bg-[hsl(220,14.3%,97%)]">
       <Header />
-      <main className=\"max-w-4xl mx-auto p-8\">
-        <article className=\"bg-white rounded-2xl p-8 shadow\">
-          <h1 className=\"text-3xl font-bold mb-4\">{post.title}</h1>
-          <p className=\"text-sm text-[hsl(220,8.9%,46.1%)] mb-6\">{post.excerpt} — Published on {format(new Date(), 'PPP')}</p>
-          <div className=\"prose max-w-none text-[hsl(220,8.9%,46.1%)]\">
-            {post.content.split('\\n').map((p, i) => (<p key={i}>{p}</p>))}
+      <main className="max-w-4xl mx-auto p-8">
+        <article className="bg-white rounded-2xl p-8 shadow">
+          <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+          <p className="text-sm text-[hsl(220,8.9%,46.1%)] mb-6">
+            {post.excerpt} — Published on {format(new Date(), 'PPP')}
+          </p>
+          <div className="prose max-w-none text-[hsl(220,8.9%,46.1%)]">
+            {post.content.split('\n').map((p, i) => (<p key={i}>{p}</p>))}
           </div>
-          <div className=\"mt-6\">
-            <a href=\"/sip-calculator\" className=\"btn inline-block\">Try the SIP Calculator</a>
+          <div className="mt-6">
+            <a href="/sip-calculator" className="btn inline-block">Try the SIP Calculator</a>
           </div>
         </article>
       </main>
