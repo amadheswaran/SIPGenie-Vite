@@ -1,0 +1,496 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Rocket, Download } from "lucide-react";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import InvestmentChart from "./investment-chart";
+import GrowthChart from "./growth-chart";
+
+type CalculatorMode = 'sip' | 'lumpsum';
+
+interface CalculationResult {
+  investedAmount: number;
+  estimatedReturns: number;
+  totalValue: number;
+  yearlyData: Array<{
+    year: number;
+    invested: number;
+    totalValue: number;
+  }>;
+}
+
+export default function SIPCalculator() {
+  const [mode, setMode] = useState<CalculatorMode>('sip');
+  const [monthlyAmount, setMonthlyAmount] = useState(25000);
+  const [returnRate, setReturnRate] = useState(12);
+  const [timePeriod, setTimePeriod] = useState(10);
+  const [results, setResults] = useState<CalculationResult>({
+    investedAmount: 0,
+    estimatedReturns: 0,
+    totalValue: 0,
+    yearlyData: []
+  });
+
+  const calculateSIP = (amount: number, rate: number, years: number): CalculationResult => {
+    // SIP Formula: M = P × ({[1 + i]^n – 1} / i) × (1 + i)
+    // Where:
+    // M = Maturity amount (future value)
+    // P = Monthly investment amount
+    // i = Monthly rate of interest (annual rate / 12 / 100)
+    // n = Total number of monthly payments (years × 12)
+    //
+    // Example: ₹1,000 per month for 12 months at 12% annual rate
+    // Monthly rate (i) = 12%/12 = 1% = 0.01
+    // M = 1,000 × ({[1 + 0.01]^12 – 1} / 0.01) × (1 + 0.01) = ₹12,809 approximately
+    
+    const monthlyRate = rate / 100 / 12; // Convert annual percentage to monthly decimal
+    const totalMonths = years * 12; // Total number of payments
+    const investedAmount = amount * totalMonths; // Total invested amount
+    
+    let futureValue = 0;
+    if (monthlyRate > 0) {
+      // Apply the SIP formula: M = P × ({[1 + i]^n – 1} / i) × (1 + i)
+      const compoundFactor = Math.pow(1 + monthlyRate, totalMonths); // (1 + i)^n
+      const numerator = compoundFactor - 1; // [(1 + i)^n - 1]
+      const sipMultiplier = (numerator / monthlyRate) * (1 + monthlyRate); // ({[1 + i]^n – 1} / i) × (1 + i)
+      futureValue = amount * sipMultiplier; // M = P × sipMultiplier
+    } else {
+      futureValue = investedAmount; // If no returns, future value equals invested amount
+    }
+    
+    const estimatedReturns = futureValue - investedAmount;
+
+    // Calculate yearly data using the same SIP formula
+    const yearlyData = [];
+    for (let year = 1; year <= years; year++) {
+      const invested = amount * 12 * year; // Total invested up to this year
+      const months = year * 12; // Number of payments made
+      let yearFutureValue = 0;
+      
+      if (monthlyRate > 0) {
+        // Apply SIP formula for this year: M = P × ({[1 + i]^n – 1} / i) × (1 + i)
+        const compoundFactor = Math.pow(1 + monthlyRate, months);
+        const numerator = compoundFactor - 1;
+        const sipMultiplier = (numerator / monthlyRate) * (1 + monthlyRate);
+        yearFutureValue = amount * sipMultiplier;
+      } else {
+        yearFutureValue = invested;
+      }
+      
+      yearlyData.push({
+        year,
+        invested,
+        totalValue: yearFutureValue
+      });
+    }
+    
+    return {
+      investedAmount,
+      estimatedReturns,
+      totalValue: futureValue,
+      yearlyData
+    };
+  };
+
+  const calculateLumpsum = (amount: number, rate: number, years: number): CalculationResult => {
+    const futureValue = amount * Math.pow(1 + rate / 100, years);
+    const estimatedReturns = futureValue - amount;
+
+    // Calculate yearly data
+    const yearlyData = [];
+    for (let year = 1; year <= years; year++) {
+      const yearFutureValue = amount * Math.pow(1 + rate / 100, year);
+      yearlyData.push({
+        year,
+        invested: amount,
+        totalValue: yearFutureValue
+      });
+    }
+    
+    return {
+      investedAmount: amount,
+      estimatedReturns,
+      totalValue: futureValue,
+      yearlyData
+    };
+  };
+
+  const formatCurrency = (amount: number): string => {
+    return '₹' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  const downloadPDF = async () => {
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Header
+      pdf.setFillColor(22, 163, 74); // Green color
+      pdf.rect(0, 0, pageWidth, 40, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('SIPGenie', pageWidth / 2, 20, { align: 'center' });
+      pdf.setFontSize(14);
+      pdf.text('Investment Calculation Report', pageWidth / 2, 30, { align: 'center' });
+      
+      // Reset text color
+      pdf.setTextColor(0, 0, 0);
+      
+      // Date
+      pdf.setFontSize(10);
+      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 55);
+      
+      // Investment Details Section
+      let yPos = 70;
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('INVESTMENT DETAILS', 20, yPos);
+      
+      yPos += 15;
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Monthly Investment: ${formatCurrency(monthlyAmount)}`, 20, yPos);
+      yPos += 8;
+      pdf.text(`Expected Return Rate: ${returnRate}% per annum`, 20, yPos);
+      yPos += 8;
+      pdf.text(`Investment Period: ${timePeriod} years`, 20, yPos);
+      
+      // Results Summary Section
+      yPos += 20;
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('RESULTS SUMMARY', 20, yPos);
+      
+      yPos += 15;
+      pdf.setFillColor(240, 248, 255);
+      pdf.rect(20, yPos - 5, pageWidth - 40, 30, 'F');
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Total Invested: ${formatCurrency(results.investedAmount)}`, 25, yPos + 5);
+      pdf.text(`Estimated Returns: ${formatCurrency(results.estimatedReturns)}`, 25, yPos + 13);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text(`Final Value: ${formatCurrency(results.totalValue)}`, 25, yPos + 23);
+      
+      // Year-wise breakdown
+      yPos += 45;
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('YEAR-WISE BREAKDOWN', 20, yPos);
+      
+      yPos += 10;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Year', 25, yPos);
+      pdf.text('Invested Amount', 60, yPos);
+      pdf.text('Total Value', 130, yPos);
+      
+      pdf.setFont('helvetica', 'normal');
+      results.yearlyData.forEach((data, index) => {
+        yPos += 6;
+        if (yPos > pageHeight - 30) {
+          pdf.addPage();
+          yPos = 30;
+        }
+        pdf.text(`${data.year}`, 25, yPos);
+        pdf.text(`${formatCurrency(data.invested)}`, 60, yPos);
+        pdf.text(`${formatCurrency(data.totalValue)}`, 130, yPos);
+      });
+      
+      // Footer
+      const footerY = pageHeight - 20;
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text('This report is generated by SIPGenie - Your Smart Investment Companion', pageWidth / 2, footerY, { align: 'center' });
+      pdf.text('Visit: https://sipgenie.com for more investment tools', pageWidth / 2, footerY + 5, { align: 'center' });
+      
+      // Save the PDF
+      pdf.save(`SIPGenie_Investment_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // Fallback to text download
+      const pdfContent = `
+SIPGenie - Investment Calculation Report
+Generated on: ${new Date().toLocaleDateString()}
+
+INVESTMENT DETAILS:
+Monthly Investment: ${formatCurrency(monthlyAmount)}
+Expected Return Rate: ${returnRate}% per annum
+Investment Period: ${timePeriod} years
+
+RESULTS SUMMARY:
+Total Invested: ${formatCurrency(results.investedAmount)}
+Estimated Returns: ${formatCurrency(results.estimatedReturns)}
+Final Value: ${formatCurrency(results.totalValue)}
+
+YEAR-WISE BREAKDOWN:
+${results.yearlyData.map(data => 
+  `Year ${data.year}: Invested: ${formatCurrency(data.invested)}, Value: ${formatCurrency(data.totalValue)}`
+).join('\n')}
+
+This report is generated by SIPGenie - Your Smart Investment Companion
+Visit: https://sipgenie.com for more investment tools
+      `.trim();
+
+      const blob = new Blob([pdfContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SIPGenie_Investment_Report_${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const updateSliderBackground = (sliderId: string, value: number, min: number, max: number) => {
+    const slider = document.getElementById(sliderId) as HTMLInputElement;
+    if (slider) {
+      const percentage = ((value - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right, hsl(162, 100%, 41%) 0%, hsl(162, 100%, 41%) ${percentage}%, hsl(220, 13%, 91%) ${percentage}%, hsl(220, 13%, 91%) 100%)`;
+    }
+  };
+
+  useEffect(() => {
+    const result = mode === 'sip' 
+      ? calculateSIP(monthlyAmount, returnRate, timePeriod)
+      : calculateLumpsum(monthlyAmount, returnRate, timePeriod);
+    setResults(result);
+
+    // Update slider backgrounds
+    updateSliderBackground('amountSlider', monthlyAmount, 500, 100000);
+    updateSliderBackground('returnSlider', returnRate, 1, 30);
+    updateSliderBackground('timeSlider', timePeriod, 1, 40);
+  }, [monthlyAmount, returnRate, timePeriod, mode]);
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-8">
+      {/* Calculator Input Panel */}
+      <div className="lg:col-span-2">
+        <Card className="calculator-shadow animate-slide-up">
+          <CardContent className="p-8">
+            {/* Calculator Mode Toggle */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-gray-100 p-1 rounded-xl flex">
+                <Button
+                  variant={mode === 'sip' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMode('sip')}
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    mode === 'sip' 
+                      ? 'bg-white text-[hsl(224,71.4%,4.1%)] shadow-sm' 
+                      : 'text-gray-600 hover:text-[hsl(224,71.4%,4.1%)]'
+                  }`}
+                  data-testid="button-mode-sip"
+                >
+                  SIP
+                </Button>
+                <Button
+                  variant={mode === 'lumpsum' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMode('lumpsum')}
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    mode === 'lumpsum' 
+                      ? 'bg-white text-[hsl(224,71.4%,4.1%)] shadow-sm' 
+                      : 'text-gray-600 hover:text-[hsl(224,71.4%,4.1%)]'
+                  }`}
+                  data-testid="button-mode-lumpsum"
+                >
+                  Lumpsum
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              {/* Monthly Investment / Lumpsum Amount */}
+              <div className="group">
+                <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
+                  {mode === 'sip' ? 'Monthly investment' : 'Investment amount'}
+                </Label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">₹</div>
+                  <Input
+                    type="number"
+                    value={monthlyAmount}
+                    onChange={(e) => setMonthlyAmount(Number(e.target.value))}
+                    min={500}
+                    max={10000000}
+                    className="pl-8 pr-4 py-4 text-lg font-medium bg-gray-50 focus:bg-white focus:border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                    data-testid="input-monthly-amount"
+                  />
+                  <div className="mt-2 flex justify-between text-sm text-[hsl(220,8.9%,46.1%)]">
+                    <span>Min: ₹500</span>
+                    <span>Max: ₹1 Cr</span>
+                  </div>
+                </div>
+                {/* Amount Range Slider */}
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    id="amountSlider"
+                    min={500}
+                    max={100000}
+                    value={monthlyAmount}
+                    onChange={(e) => setMonthlyAmount(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                    data-testid="slider-amount"
+                  />
+                </div>
+              </div>
+
+              {/* Expected Return Rate */}
+              <div className="group">
+                <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
+                  Expected return rate (p.a)
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={returnRate}
+                    onChange={(e) => setReturnRate(Number(e.target.value))}
+                    min={1}
+                    max={30}
+                    step={0.1}
+                    className="pr-8 pl-4 py-4 text-lg font-medium bg-gray-50 focus:bg-white focus:border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                    data-testid="input-return-rate"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">%</div>
+                  <div className="mt-2 flex justify-between text-sm text-[hsl(220,8.9%,46.1%)]">
+                    <span>Conservative: 8-10%</span>
+                    <span>Aggressive: 12-15%</span>
+                  </div>
+                </div>
+                {/* Return Rate Slider */}
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    id="returnSlider"
+                    min={1}
+                    max={30}
+                    value={returnRate}
+                    step={0.5}
+                    onChange={(e) => setReturnRate(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                    data-testid="slider-return-rate"
+                  />
+                </div>
+              </div>
+
+              {/* Time Period */}
+              <div className="group">
+                <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
+                  Time period
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={timePeriod}
+                    onChange={(e) => setTimePeriod(Number(e.target.value))}
+                    min={1}
+                    max={40}
+                    className="pr-12 pl-4 py-4 text-lg font-medium bg-gray-50 focus:bg-white focus:border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                    data-testid="input-time-period"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">Years</div>
+                  <div className="mt-2 flex justify-between text-sm text-[hsl(220,8.9%,46.1%)]">
+                    <span>Short term: 1-3 years</span>
+                    <span>Long term: 10+ years</span>
+                  </div>
+                </div>
+                {/* Time Period Slider */}
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    id="timeSlider"
+                    min={1}
+                    max={40}
+                    value={timePeriod}
+                    onChange={(e) => setTimePeriod(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                    data-testid="slider-time-period"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Results Panel */}
+      <div className="space-y-6">
+        {/* Results Summary */}
+        <Card className="calculator-shadow animate-slide-up">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-[hsl(224,71.4%,4.1%)] mb-6" data-testid="text-investment-summary">Investment Summary</h3>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                <span className="text-sm text-[hsl(220,8.9%,46.1%)]">Invested amount</span>
+                <span className="font-semibold text-[hsl(224,71.4%,4.1%)]" data-testid="text-invested-amount">
+                  {formatCurrency(results.investedAmount)}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center p-4 bg-[hsl(162,100%,41%)]/5 rounded-xl">
+                <span className="text-sm text-[hsl(220,8.9%,46.1%)]">Est. returns</span>
+                <span className="font-semibold text-[hsl(162,100%,41%)]" data-testid="text-estimated-returns">
+                  {formatCurrency(results.estimatedReturns)}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center p-4 bg-[hsl(207,90%,54%)]/5 rounded-xl border-2 border-[hsl(207,90%,54%)]/20">
+                <span className="text-sm font-medium text-[hsl(224,71.4%,4.1%)]">Total value</span>
+                <span className="text-xl font-bold text-[hsl(207,90%,54%)]" data-testid="text-total-value">
+                  {formatCurrency(results.totalValue)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 mt-6">
+              <Button 
+                variant="outline"
+                className="bg-gradient-to-r from-[hsl(162,100%,41%)] to-[hsl(207,90%,54%)] text-white py-4 rounded-xl font-semibold text-lg hover:shadow-xl transition-all transform hover:scale-105"
+                onClick={downloadPDF}
+                data-testid="button-download-pdf"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                DOWNLOAD PDF
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Chart Container */}
+        <Card className="calculator-shadow animate-slide-up">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-[hsl(224,71.4%,4.1%)] mb-4" data-testid="text-investment-breakdown">Investment Breakdown</h3>
+            <InvestmentChart 
+              investedAmount={results.investedAmount}
+              estimatedReturns={results.estimatedReturns}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Growth Chart Section */}
+      <div className="lg:col-span-3 mt-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-[hsl(224,71.4%,4.1%)] mb-4" data-testid="text-growth-title">Investment Growth Over Time</h2>
+          <p className="text-[hsl(220,8.9%,46.1%)]">See how your investment grows year by year</p>
+        </div>
+        <Card className="bg-[hsl(220,14.3%,97%)] calculator-shadow">
+          <CardContent className="p-8">
+            <GrowthChart data={results.yearlyData} />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
