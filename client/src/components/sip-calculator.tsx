@@ -145,6 +145,16 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
     const pageHeight = (canvas.height * pageWidth) / canvas.width;
 
     pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
+     pdf.setFontSize(16);
+      pdf.text('SIPGenie — Investment Summary', margin, 25);
+      pdf.setFontSize(11);
+      pdf.text(`Monthly Investment: ${formatCurrency(monthlyAmount)}`, margin, 40);
+      pdf.text(`Expected Return Rate: ${returnRate}% p.a.`, margin, 48);
+      pdf.text(`Investment Period: ${timePeriod} years`, margin, 56);
+      pdf.text(`Annual Step-up: ${stepUpPercent}%`, margin, 64);
+      pdf.text(`Total Invested: ${formatCurrency(results.investedAmount)}`, margin, 80);
+      pdf.text(`Expected Wealth: ${formatCurrency(results.totalValue)}`, margin, 88);
+      pdf.text(`Estimated Returns: ${formatCurrency(results.estimatedReturns)}`, margin, 96);
     pdf.save("SIP_Report.pdf");
   };
 
@@ -207,7 +217,7 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
               </div>
             </div>
 
-            <div id="pdf-export-section" className="space-y-8">
+            <div className="space-y-8">
               {/* Monthly Investment / Lumpsum Amount */}
               <div className="group">
                 <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
@@ -359,7 +369,7 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
       </div>
 
       {/* Results Panel */}
-      <div className="space-y-6">
+      <div id="pdf-export-section" className="space-y-6">
         {/* Results Summary */}
         <Card className="calculator-shadow animate-slide-up">
           <CardContent className="p-6">
