@@ -132,7 +132,7 @@ export default function Home() {
       </section>
 
       {/* Main Calculator Section */}
-      <section id="calculator" className="py-16">
+      <section id="calculator pdf-export-section" className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SIPCalculator />
         </div>
