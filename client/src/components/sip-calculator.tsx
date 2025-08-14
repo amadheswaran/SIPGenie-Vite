@@ -95,7 +95,7 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
   };
 
   
-const downloadPDF = async () => {
+/* const downloadPDF = async () => {
     try {
       const container = document.getElementById('calculatorRoot');
       if (!container) {
@@ -127,6 +127,25 @@ const downloadPDF = async () => {
       console.error('PDF generation failed', err);
       alert('PDF generation failed: ' + (err instanceof Error ? err.message : String(err)));
     }
+  }; */
+
+  const downloadPDF = async () => {
+    const element = document.getElementById("pdf-export-section");
+    if (!element) return;
+
+    const canvas = await html2canvas(element, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = (canvas.height * pageWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
+    pdf.save("SIP_Report.pdf");
   };
 
   const updateSliderBackground = (sliderId: string, value: number, min: number, max: number) => {
@@ -188,7 +207,7 @@ const downloadPDF = async () => {
               </div>
             </div>
 
-            <div className="space-y-8">
+            <div id="pdf-export-section" className="space-y-8">
               {/* Monthly Investment / Lumpsum Amount */}
               <div className="group">
                 <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
@@ -298,13 +317,8 @@ const downloadPDF = async () => {
                   />
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-
-              {/* Annual Step-up Percentage */}
+               {/* Annual Step-up Percentage */}
               <div className="group">
                 <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
                   Annual Step-up (%) — increase your SIP yearly
@@ -338,6 +352,11 @@ const downloadPDF = async () => {
                   </div>
                 </div>
               </div>
+              
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Results Panel */}
       <div className="space-y-6">
