@@ -148,6 +148,7 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
     const pageHeight = (canvas.height * pageWidth) / canvas.width;
 
     pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
+     pdf.addPage();
      pdf.setFontSize(16);
       pdf.text('SIPGenie — Investment Summary', margin, 25);
       pdf.setFontSize(11);
@@ -372,7 +373,7 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
       </div>
 
       {/* Results Panel */}
-      <div id="pdf-export-section" className="space-y-6">
+      <div className="space-y-6">
         {/* Results Summary */}
         <Card className="calculator-shadow animate-slide-up">
           <CardContent className="p-6">
