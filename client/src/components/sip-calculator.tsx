@@ -141,7 +141,6 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
 
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 10;
       const usableWidth = pageWidth - margin * 2;
       const imgProps = pdf.getImageProperties(imgData);
