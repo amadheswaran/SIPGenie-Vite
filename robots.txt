@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Block common junk
+Disallow: /404
+Disallow: /404.html
+
+Sitemap: https://sip-genie-vite.vercel.app/sitemap.xml
