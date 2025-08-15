@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIP Calculator | SIPGenie</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-[hsl(220,14.3%,97%)] p-6">
+
+  <!-- Calculator Root -->
+  <div id="calculatorRoot" class="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+    
+    <!-- Calculator Panel -->
+    <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow">
+      <div class="flex justify-center mb-8">
+        <div class="bg-gray-100 p-1 rounded-xl flex">
+          <button id="mode-sip" class="px-6 py-2 rounded-lg text-sm font-medium bg-white shadow-sm">SIP</button>
+          <button id="mode-lumpsum" class="px-6 py-2 rounded-lg text-sm font-medium text-gray-600">Lumpsum</button>
+        </div>
+      </div>
+
+      <!-- Monthly Amount -->
+      <label class="block text-sm font-medium mb-3" id="amount-label">Monthly investment</label>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">₹</span>
+        <input type="number" id="amount" min="500" max="10000000" value="25000" class="pl-8 pr-4 py-4 w-full border rounded-lg bg-gray-50">
+        <div class="mt-2 flex justify-between text-sm text-gray-500"><span>Min: ₹500</span><span>Max: ₹1 Cr</span></div>
+      </div>
+      <input type="range" id="amountSlider" min="500" max="100000" value="25000" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+
+      <!-- Return Rate -->
+      <label class="block text-sm font-medium mb-3">Expected return rate (p.a)</label>
+      <div class="relative mb-6">
+        <input type="number" id="returnRate" min="1" max="30" step="0.1" value="12" class="pr-8 pl-4 py-4 w-full border rounded-lg bg-gray-50">
+        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">%</span>
+      </div>
+      <input type="range" id="returnSlider" min="1" max="30" step="0.5" value="12" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+
+      <!-- Time Period -->
+      <label class="block text-sm font-medium mb-3">Time period</label>
+      <div class="relative mb-6">
+        <input type="number" id="timePeriod" min="1" max="40" value="10" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50">
+        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">Years</span>
+      </div>
+      <input type="range" id="timeSlider" min="1" max="40" value="10" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+
+      <!-- Step-up -->
+      <label class="block text-sm font-medium mb-3">Annual Step-up (%)</label>
+      <input type="number" id="stepUp" min="0" max="30" step="0.1" value="0" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50 mb-4">
+      <input type="range" id="stepUpSlider" min="0" max="30" step="0.1" value="0" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+    </div>
+
+    <!-- Results -->
+    <div class="space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-semibold mb-6">Investment Summary</h3>
+        <div class="flex justify-between p-4 bg-gray-50 rounded-xl"><span>Invested amount</span><span id="investedAmount">₹0</span></div>
+        <div class="flex justify-between p-4 bg-green-50 rounded-xl"><span>Est. returns</span><span id="returns" class="text-green-600">₹0</span></div>
+        <div class="flex justify-between p-4 bg-blue-50 rounded-xl"><span>Total value</span><span id="totalValue" class="text-blue-600 font-bold">₹0</span></div>
+        <button id="downloadPDF" class="bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 px-6 rounded-xl w-full mt-4">Download PDF</button>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-semibold mb-4">Investment Breakdown</h3>
+        <canvas id="investmentChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Growth Chart -->
+  <div class="bg-white p-6 rounded-xl shadow mt-12 max-w-7xl mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Investment Growth Over Time</h3>
+    <canvas id="growthChart" height="200"></canvas>
+  </div>
+
+<script>
+  const { jsPDF } = window.jspdf;
+
+  let mode = 'sip';
+  let monthlyAmount = 25000;
+  let returnRate = 12;
+  let timePeriod = 10;
+  let stepUpPercent = 0;
+
+  const investedAmountEl = document.getElementById("investedAmount");
+  const returnsEl = document.getElementById("returns");
+  const totalValueEl = document.getElementById("totalValue");
+
+  const formatCurrency = (num) => "₹" + num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+  function calculateSIP(amount, rate, years, stepUp = 0) {
+    const monthlyRate = rate / 100 / 12;
+    const months = years * 12;
+    let currentP = amount, fv = 0, investedAmount = 0;
+    let yearlyData = [];
+
+    for (let m = 0; m < months; m++) {
+      fv = fv * (1 + monthlyRate) + currentP;
+      investedAmount += currentP;
+      if ((m + 1) % 12 === 0) {
+        yearlyData.push({ year: (m+1)/12, invested: investedAmount, totalValue: fv });
+        currentP *= (1 + stepUp / 100);
+      }
+    }
+    return { investedAmount, estimatedReturns: fv - investedAmount, totalValue: fv, yearlyData };
+  }
+
+  function calculateLumpsum(amount, rate, years) {
+    const fv = amount * Math.pow(1 + rate/100, years);
+    let yearlyData = [];
+    for (let y=1; y<=years; y++) yearlyData.push({ year: y, invested: amount, totalValue: amount * Math.pow(1 + rate/100, y) });
+    return { investedAmount: amount, estimatedReturns: fv - amount, totalValue: fv, yearlyData };
+  }
+
+  function update() {
+    const res = mode === 'sip' ? calculateSIP(monthlyAmount, returnRate, timePeriod, stepUpPercent) : calculateLumpsum(monthlyAmount, returnRate, timePeriod);
+    investedAmountEl.textContent = formatCurrency(res.investedAmount);
+    returnsEl.textContent = formatCurrency(res.estimatedReturns);
+    totalValueEl.textContent = formatCurrency(res.totalValue);
+    investmentChart.data.datasets[0].data = [res.investedAmount, res.estimatedReturns];
+    investmentChart.update();
+    growthChart.data.labels = res.yearlyData.map(y => `Year ${y.year}`);
+    growthChart.data.datasets[0].data = res.yearlyData.map(y => y.totalValue);
+    growthChart.update();
+  }
+
+  document.getElementById("mode-sip").onclick = () => { mode='sip'; update(); };
+  document.getElementById("mode-lumpsum").onclick = () => { mode='lumpsum'; update(); };
+  document.getElementById("amount").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amountSlider").value = monthlyAmount; update(); };
+  document.getElementById("amountSlider").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amount").value = monthlyAmount; update(); };
+  document.getElementById("returnRate").oninput = e => { returnRate = +e.target.value; document.getElementById("returnSlider").value = returnRate; update(); };
+  document.getElementById("returnSlider").oninput = e => { returnRate = +e.target.value; document.getElementById("returnRate").value = returnRate; update(); };
+  document.getElementById("timePeriod").oninput = e => { timePeriod = +e.target.value; document.getElementById("timeSlider").value = timePeriod; update(); };
+  document.getElementById("timeSlider").oninput = e => { timePeriod = +e.target.value; document.getElementById("timePeriod").value = timePeriod; update(); };
+  document.getElementById("stepUp").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUpSlider").value = stepUpPercent; update(); };
+  document.getElementById("stepUpSlider").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUp").value = stepUpPercent; update(); };
+
+  document.getElementById("downloadPDF").onclick = async () => {
+    const element = document.getElementById("calculatorRoot");
+    const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const width = pdf.internal.pageSize.getWidth();
+    const height = (canvas.height * width) / canvas.width;
+    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+    pdf.save("SIP_Report.pdf");
+  };
+
+  const investmentChart = new Chart(document.getElementById("investmentChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Invested Amount", "Estimated Returns"],
+      datasets: [{ data: [0, 0], backgroundColor: ["#22c55e", "#3b82f6"] }]
+    }
+  });
+
+  const growthChart = new Chart(document.getElementById("growthChart"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Total Value", data: [], borderColor: "#3b82f6" }] }
+  });
+
+  update();
+</script>
+</body>
+</html>
