@@ -29,7 +29,7 @@ export default function Home() {
                 <span className="text-xl font-bold bg-gradient-to-r from-[hsl(162,100%,41%)] to-[hsl(207,90%,54%)] bg-clip-text text-transparent">SIPGenie</span>
               </div>
               <div className="hidden md:flex space-x-12 absolute left-1/2 transform -translate-x-1/2">
-                <a href="/sip-calculator.html" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Calculator</a>
+                <a href="/" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Calculator</a>
                 <a href="/compare.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Compare</a>
                 <a href="/blog/index.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Blog</a>
               </div>
@@ -51,7 +51,7 @@ export default function Home() {
           <div className="md:hidden bg-white border-t border-gray-100 shadow-lg animate-slide-up">
             <div className="px-4 py-3 space-y-3">
               <a 
-                href="/sip-calculator.html" 
+                href="/" 
                 className="block py-3 text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -222,8 +222,8 @@ export default function Home() {
               <ul className="space-y-2 text-gray-300">
                 <li><a href="#" className="hover:text-[hsl(162,100%,41%)] transition-colors">Help Center</a></li>
                 <li><a href="#" className="hover:text-[hsl(162,100%,41%)] transition-colors">Contact Us</a></li>
-                <li><a href="#" className="hover:text-[hsl(162,100%,41%)] transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-[hsl(162,100%,41%)] transition-colors">Privacy Policy</a></li>
+                <li><a href="/disclaimer.html" className="hover:text-[hsl(162,100%,41%)] transition-colors">Disclaimer</a></li>
+                <li><a href="/privacy-policy.html" className="hover:text-[hsl(162,100%,41%)] transition-colors">Privacy Policy</a></li>
               </ul>
             </div>
           </div>
