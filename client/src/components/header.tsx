@@ -36,10 +36,10 @@ export default function Header() {
                 <a href="/sip-calculator" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
                   Calculator
                 </a>
-                <a href="/compare" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
+                <a href="/compare/index.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
                   Compare
                 </a>
-                <a href="/blog" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
+                <a href="/blog/index.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
                   Blog
                 </a>
               </div>
