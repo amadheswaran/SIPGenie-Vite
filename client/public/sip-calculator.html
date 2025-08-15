@@ -1,124 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SIP Calculator | SIPGenie</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIP Calculator | SIPGenie</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <style>
+
         body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; } .max-w-7xl { max-width: 1280px; margin: auto; } header { background: white; border-bottom: 1px solid #eee; padding: 1rem; display: flex; align-items: center; justify-content: space-between; } nav a { margin-left: 1rem; text-decoration: none; color: #333; font-weight: 500; } nav a:hover { text-decoration: underline; } footer { background: #fff; border-top: 1px solid #eee; padding: 2rem; text-align: center; color: #555; } .grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); } .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s ease; } .card:hover { transform: scale(1.03); } .badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 9999px; } .cta { background: linear-gradient(to right, hsl(162,100%,41%), hsl(207,90%,54%)); color: white; padding: 1rem 2rem; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block; }
+
         
+
         .animate-slide-up { animation: slide-up 0.3s ease-out; } @keyframes slide-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
     </style>
 </head>
-
 <body class="bg-[hsl(220,14.3%,97%)] p-6">
 
-
         <!-- Navigation Header -->
+
         <nav class="bg-white shadow-sm border-b border-gray-100 pt-5">
+
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
                 <div class="flex justify-between items-center h-16">
+
                     <div class="flex items-center space-x-8">
+
                         <!-- Logo -->
+
                         <div class="flex items-center space-x-2">
+
                             <a href="/" class="flex items-center space-x-2 pr-4">
+
                                 <div class="w-10 h-10 bg-gradient-to-br from-[hsl(162,100%,41%)] to-[hsl(207,90%,54%)] rounded-xl flex items-center justify-center shadow-md">
+
                                     <!-- Zap Icon -->
+
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /> </svg>
+
                                 </div> <span class="text-xl font-bold bg-gradient-to-r from-[hsl(162,100%,41%)] to-[hsl(207,90%,54%)] bg-clip-text text-transparent"> SIPGenie </span> </a>
+
                         </div>
+
                         <!-- Desktop Menu -->
+
                         <div class="hidden md:flex space-x-12 absolute left-1/2 transform -translate-x-1/2"> <a href="/sip-calculator.html" class="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Calculator</a> <a href="/compare/index.html" class="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Compare</a>                            <a href="/blog/index.html" class="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Blog</a> </div>
+
                     </div>
+
                     <!-- Mobile Menu Button -->
+
                     <div class="flex items-center">
+
                         <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg text-[hsl(224,71.4%,4.1%)] hover:bg-gray-100 transition-colors">
+
                             <!-- Menu Icon -->
+
                             <svg id="menuIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /> </svg>
+
                             <!-- Close Icon (hidden by default) -->
+
                             <svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /> </svg>
+
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
+
             <!-- Mobile Menu -->
+
             <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg animate-slide-up">
+
                 <div class="px-4 py-3 space-y-3"> <a href="/sip-calculator.html" class="block py-3 text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-colors">Calculator</a> <a href="/compare/index.html" class="block py-3 text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-colors">Compare</a>                    <a href="/blog/index.html" class="block py-3 text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-colors">Blog</a> </div>
+
             </div>
+
         </nav>
+
         <script>
+
             const mobileMenuButton = document.getElementById('mobileMenuButton'); const mobileMenu = document.getElementById('mobileMenu'); const menuIcon = document.getElementById('menuIcon'); const closeIcon = document.getElementById('closeIcon'); mobileMenuButton.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); menuIcon.classList.toggle('hidden'); closeIcon.classList.toggle('hidden'); });
+
         </script>
+  
+  <div id="pdf-export-section" class="pt-5">
+  <!-- Calculator Root -->
+  <div id="calculatorRoot" class="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+    
+    <!-- Calculator Panel -->
+    <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow">
+      <div class="flex justify-center mb-8">
+        <div class="bg-gray-100 p-1 rounded-xl flex">
+          <button id="mode-sip" class="px-6 py-2 rounded-lg text-sm font-medium bg-white shadow-sm">SIP</button>
+          <button id="mode-lumpsum" class="px-6 py-2 rounded-lg text-sm font-medium text-gray-600">Lumpsum</button>
+        </div>
+      </div>
 
-    <div id="pdf-export-section" class="mt-5">
-        <!-- Calculator Root -->
-        <div id="calculatorRoot" class="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            <!-- Calculator Panel -->
-            <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow">
-                <div class="flex justify-center mb-8">
-                    <div class="bg-gray-100 p-1 rounded-xl flex">
-                        <button id="mode-sip" class="px-6 py-2 rounded-lg text-sm font-medium bg-white shadow-sm">SIP</button>
-                        <button id="mode-lumpsum" class="px-6 py-2 rounded-lg text-sm font-medium text-gray-600">Lumpsum</button>
-                    </div>
-                </div>
-                <!-- Monthly Amount -->
-                <label class="block text-sm font-medium mb-3" id="amount-label">Monthly investment</label>
-                <div class="relative mb-6"> <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">₹</span>
-                    <input type="number" id="amount" min="500" max="10000000" value="25000" class="pl-8 pr-4 py-4 w-full border rounded-lg bg-gray-50">
-                    <div class="mt-2 flex justify-between text-sm text-gray-500"><span>Min: ₹500</span><span>Max: ₹1 Cr</span></div>
-                </div>
-                <input type="range" id="amountSlider" min="500" max="100000" value="25000" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
-                <!-- Return Rate -->
-                <label class="block text-sm font-medium mb-3">Expected return rate (p.a)</label>
-                <div class="relative mb-6">
-                    <input type="number" id="returnRate" min="1" max="30" step="0.1" value="12" class="pr-8 pl-4 py-4 w-full border rounded-lg bg-gray-50"> <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">%</span> </div>
-                <input type="range" id="returnSlider" min="1" max="30" step="0.5" value="12" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
-                <!-- Time Period -->
-                <label class="block text-sm font-medium mb-3">Time period</label>
-                <div class="relative mb-6">
-                    <input type="number" id="timePeriod" min="1" max="40" value="10" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50"> <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">Years</span> </div>
-                <input type="range" id="timeSlider" min="1" max="40" value="10" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
-                <!-- Step-up -->
-                <label class="block text-sm font-medium mb-3">Annual Step-up (%)</label>
-                <input type="number" id="stepUp" min="0" max="30" step="0.1" value="0" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50 mb-4">
-                <input type="range" id="stepUpSlider" min="0" max="30" step="0.1" value="0" class="w-full h-2 bg-gray-200 rounded-lg mb-8"> </div>
-            <!-- Results -->
-            <div class="space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h3 class="text-lg font-semibold mb-6">Investment Summary</h3>
-                    <div class="flex justify-between p-4 bg-gray-50 rounded-xl"><span>Invested amount</span><span id="investedAmount">₹0</span></div>
-                    <div class="flex justify-between p-4 bg-green-50 rounded-xl"><span>Est. returns</span><span id="returns" class="text-green-600">₹0</span></div>
-                    <div class="flex justify-between p-4 bg-blue-50 rounded-xl"><span>Total value</span><span id="totalValue" class="text-blue-600 font-bold">₹0</span></div>
-                    <button id="downloadPDF" class="bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 px-6 rounded-xl w-full mt-4">Download PDF</button>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h3 class="text-lg font-semibold mb-4">Investment Breakdown</h3>
-                    <canvas id="investmentChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-        <!-- Growth Chart -->
-        <div class="bg-white p-6 rounded-xl shadow mt-12 max-w-7xl mx-auto">
-            <h3 class="text-lg font-semibold mb-4">Investment Growth Over Time</h3>
-            <canvas id="growthChart" height="200"></canvas>
-        </div>
+      <!-- Monthly Amount -->
+      <label class="block text-sm font-medium mb-3" id="amount-label">Monthly investment</label>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">₹</span>
+        <input type="number" id="amount" min="500" max="10000000" value="25000" class="pl-8 pr-4 py-4 w-full border rounded-lg bg-gray-50">
+        <div class="mt-2 flex justify-between text-sm text-gray-500"><span>Min: ₹500</span><span>Max: ₹1 Cr</span></div>
+      </div>
+      <input type="range" id="amountSlider" min="500" max="100000" value="25000" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+
+      <!-- Return Rate -->
+      <label class="block text-sm font-medium mb-3">Expected return rate (p.a)</label>
+      <div class="relative mb-6">
+        <input type="number" id="returnRate" min="1" max="30" step="0.1" value="12" class="pr-8 pl-4 py-4 w-full border rounded-lg bg-gray-50">
+        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">%</span>
+      </div>
+      <input type="range" id="returnSlider" min="1" max="30" step="0.5" value="12" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+
+      <!-- Time Period -->
+      <label class="block text-sm font-medium mb-3">Time period</label>
+      <div class="relative mb-6">
+        <input type="number" id="timePeriod" min="1" max="40" value="10" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50">
+        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">Years</span>
+      </div>
+      <input type="range" id="timeSlider" min="1" max="40" value="10" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
+
+      <!-- Step-up -->
+      <label class="block text-sm font-medium mb-3">Annual Step-up (%)</label>
+      <input type="number" id="stepUp" min="0" max="30" step="0.1" value="0" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50 mb-4">
+      <input type="range" id="stepUpSlider" min="0" max="30" step="0.1" value="0" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
     </div>
-    <!-- FOOTER (Copied from homepage) -->
-    <footer class="mt-5">
-        <p>© 2025 SIPGenie. All rights reserved.</p>
-        <p><a href="/privacy-policy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
-    </footer>
-    <script>
-        const { jsPDF } = window.jspdf; let mode = 'sip'; let monthlyAmount = 25000; let returnRate = 12; let timePeriod = 10; let stepUpPercent = 0; const investedAmountEl = document.getElementById("investedAmount"); const returnsEl = document.getElementById("returns"); const totalValueEl = document.getElementById("totalValue"); const formatCurrency = (num) => "₹" + num.toLocaleString("en-IN", { maximumFractionDigits: 2 }); function calculateSIP(amount, rate, years, stepUp = 0) { const monthlyRate = rate / 100 / 12; const months = years * 12; let currentP = amount, fv = 0, investedAmount = 0; let yearlyData = []; for (let m = 0; m < months; m++) { fv = fv * (1 + monthlyRate) + currentP; investedAmount += currentP; if ((m + 1) % 12 === 0) { yearlyData.push({ year: (m+1)/12, invested: investedAmount, totalValue: fv }); currentP *= (1 + stepUp / 100); } } return { investedAmount, estimatedReturns: fv - investedAmount, totalValue: fv, yearlyData }; } function calculateLumpsum(amount, rate, years) { const fv = amount * Math.pow(1 + rate/100, years); let yearlyData = []; for (let y=1; y<=years; y++) yearlyData.push({ year: y, invested: amount, totalValue: amount * Math.pow(1 + rate/100, y) }); return { investedAmount: amount, estimatedReturns: fv - amount, totalValue: fv, yearlyData }; } function update() { const res = mode === 'sip' ? calculateSIP(monthlyAmount, returnRate, timePeriod, stepUpPercent) : calculateLumpsum(monthlyAmount, returnRate, timePeriod); investedAmountEl.textContent = formatCurrency(res.investedAmount); returnsEl.textContent = formatCurrency(res.estimatedReturns); totalValueEl.textContent = formatCurrency(res.totalValue); investmentChart.data.datasets[0].data = [res.investedAmount, res.estimatedReturns]; investmentChart.update(); growthChart.data.labels = res.yearlyData.map(y => Year ${y.year}); growthChart.data.datasets[0].data = res.yearlyData.map(y => y.totalValue); growthChart.update(); } function updateToggleUI() { const sipBtn = document.getElementById("mode-sip"); const lumpsumBtn = document.getElementById("mode-lumpsum"); if (mode === "sip") { sipBtn.classList.add("bg-white", "shadow-sm", "text-black"); sipBtn.classList.remove("text-gray-600"); lumpsumBtn.classList.add("text-gray-600"); lumpsumBtn.classList.remove("bg-white", "shadow-sm", "text-black"); } else { lumpsumBtn.classList.add("bg-white", "shadow-sm", "text-black"); lumpsumBtn.classList.remove("text-gray-600"); sipBtn.classList.add("text-gray-600"); sipBtn.classList.remove("bg-white", "shadow-sm", "text-black"); } } document.getElementById("mode-sip").onclick = () => { mode='sip'; update(); updateToggleUI(); }; document.getElementById("mode-lumpsum").onclick = () => { mode='lumpsum'; update(); updateToggleUI(); }; document.getElementById("amount").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amountSlider").value = monthlyAmount; update(); }; document.getElementById("amountSlider").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amount").value = monthlyAmount; update(); }; document.getElementById("returnRate").oninput = e => { returnRate = +e.target.value; document.getElementById("returnSlider").value = returnRate; update(); }; document.getElementById("returnSlider").oninput = e => { returnRate = +e.target.value; document.getElementById("returnRate").value = returnRate; update(); }; document.getElementById("timePeriod").oninput = e => { timePeriod = +e.target.value; document.getElementById("timeSlider").value = timePeriod; update(); }; document.getElementById("timeSlider").oninput = e => { timePeriod = +e.target.value; document.getElementById("timePeriod").value = timePeriod; update(); }; document.getElementById("stepUp").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUpSlider").value = stepUpPercent; update(); }; document.getElementById("stepUpSlider").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUp").value = stepUpPercent; update(); }; document.getElementById("downloadPDF").onclick = async () => { const element = document.getElementById("pdf-export-section"); const canvas = await html2canvas(element, { useCORS: true, scale: 2 }); const imgData = canvas.toDataURL("image/png"); const pdf = new jsPDF("p", "mm", "a4"); const width = pdf.internal.pageSize.getWidth(); const height = (canvas.height * width) / canvas.width; pdf.addImage(imgData, "PNG", 0, 0, width, height); pdf.save("SIP_Report.pdf"); }; const investmentChart = new Chart(document.getElementById("investmentChart"), { type: "doughnut", data: { labels: ["Invested Amount", "Estimated Returns"], datasets: [{ data: [0, 0], backgroundColor: ["#22c55e", "#3b82f6"] }] } }); const growthChart = new Chart(document.getElementById("growthChart"), { type: "line", data: { labels: [], datasets: [{ label: "Total Value", data: [], borderColor: "#3b82f6" }] } }); update();
-    </script>
-</body>
 
+    <!-- Results -->
+    <div class="space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-semibold mb-6">Investment Summary</h3>
+        <div class="flex justify-between p-4 bg-gray-50 rounded-xl"><span>Invested amount</span><span id="investedAmount">₹0</span></div>
+        <div class="flex justify-between p-4 bg-green-50 rounded-xl"><span>Est. returns</span><span id="returns" class="text-green-600">₹0</span></div>
+        <div class="flex justify-between p-4 bg-blue-50 rounded-xl"><span>Total value</span><span id="totalValue" class="text-blue-600 font-bold">₹0</span></div>
+        <button id="downloadPDF" class="bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 px-6 rounded-xl w-full mt-4">Download PDF</button>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-semibold mb-4">Investment Breakdown</h3>
+        <canvas id="investmentChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Growth Chart -->
+  <div class="bg-white p-6 rounded-xl shadow mt-12 max-w-7xl mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Investment Growth Over Time</h3>
+    <canvas id="growthChart" height="200"></canvas>
+  </div>
+</div>
+
+    <!-- FOOTER (Copied from homepage) -->
+  <footer class="mt-5">
+    <p>© 2025 SIPGenie. All rights reserved.</p>
+    <p><a href="/privacy-policy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+  </footer>
+  
+<script>
+  const { jsPDF } = window.jspdf;
+
+  let mode = 'sip';
+  let monthlyAmount = 25000;
+  let returnRate = 12;
+  let timePeriod = 10;
+  let stepUpPercent = 0;
+
+  const investedAmountEl = document.getElementById("investedAmount");
+  const returnsEl = document.getElementById("returns");
+  const totalValueEl = document.getElementById("totalValue");
+
+  const formatCurrency = (num) => "₹" + num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+  function calculateSIP(amount, rate, years, stepUp = 0) {
+    const monthlyRate = rate / 100 / 12;
+    const months = years * 12;
+    let currentP = amount, fv = 0, investedAmount = 0;
+    let yearlyData = [];
+
+    for (let m = 0; m < months; m++) {
+      fv = fv * (1 + monthlyRate) + currentP;
+      investedAmount += currentP;
+      if ((m + 1) % 12 === 0) {
+        yearlyData.push({ year: (m+1)/12, invested: investedAmount, totalValue: fv });
+        currentP *= (1 + stepUp / 100);
+      }
+    }
+    return { investedAmount, estimatedReturns: fv - investedAmount, totalValue: fv, yearlyData };
+  }
+
+  function calculateLumpsum(amount, rate, years) {
+    const fv = amount * Math.pow(1 + rate/100, years);
+    let yearlyData = [];
+    for (let y=1; y<=years; y++) yearlyData.push({ year: y, invested: amount, totalValue: amount * Math.pow(1 + rate/100, y) });
+    return { investedAmount: amount, estimatedReturns: fv - amount, totalValue: fv, yearlyData };
+  }
+
+  function update() {
+    const res = mode === 'sip' ? calculateSIP(monthlyAmount, returnRate, timePeriod, stepUpPercent) : calculateLumpsum(monthlyAmount, returnRate, timePeriod);
+    investedAmountEl.textContent = formatCurrency(res.investedAmount);
+    returnsEl.textContent = formatCurrency(res.estimatedReturns);
+    totalValueEl.textContent = formatCurrency(res.totalValue);
+    investmentChart.data.datasets[0].data = [res.investedAmount, res.estimatedReturns];
+    investmentChart.update();
+    growthChart.data.labels = res.yearlyData.map(y => `Year ${y.year}`);
+    growthChart.data.datasets[0].data = res.yearlyData.map(y => y.totalValue);
+    growthChart.update();
+  }
+
+  function updateToggleUI() {
+  const sipBtn = document.getElementById("mode-sip");
+  const lumpsumBtn = document.getElementById("mode-lumpsum");
+
+  if (mode === "sip") {
+    sipBtn.classList.add("bg-white", "shadow-sm", "text-black");
+    sipBtn.classList.remove("text-gray-600");
+    lumpsumBtn.classList.add("text-gray-600");
+    lumpsumBtn.classList.remove("bg-white", "shadow-sm", "text-black");
+  } else {
+    lumpsumBtn.classList.add("bg-white", "shadow-sm", "text-black");
+    lumpsumBtn.classList.remove("text-gray-600");
+    sipBtn.classList.add("text-gray-600");
+    sipBtn.classList.remove("bg-white", "shadow-sm", "text-black");
+  }
+}
+
+  document.getElementById("mode-sip").onclick = () => { mode='sip'; update();   updateToggleUI(); };
+  document.getElementById("mode-lumpsum").onclick = () => { mode='lumpsum'; update();   updateToggleUI(); };
+  document.getElementById("amount").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amountSlider").value = monthlyAmount; update(); };
+  document.getElementById("amountSlider").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amount").value = monthlyAmount; update(); };
+  document.getElementById("returnRate").oninput = e => { returnRate = +e.target.value; document.getElementById("returnSlider").value = returnRate; update(); };
+  document.getElementById("returnSlider").oninput = e => { returnRate = +e.target.value; document.getElementById("returnRate").value = returnRate; update(); };
+  document.getElementById("timePeriod").oninput = e => { timePeriod = +e.target.value; document.getElementById("timeSlider").value = timePeriod; update(); };
+  document.getElementById("timeSlider").oninput = e => { timePeriod = +e.target.value; document.getElementById("timePeriod").value = timePeriod; update(); };
+  document.getElementById("stepUp").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUpSlider").value = stepUpPercent; update(); };
+  document.getElementById("stepUpSlider").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUp").value = stepUpPercent; update(); };
+
+  document.getElementById("downloadPDF").onclick = async () => {
+    const element = document.getElementById("pdf-export-section");
+    const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const width = pdf.internal.pageSize.getWidth();
+    const height = (canvas.height * width) / canvas.width;
+    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+    pdf.save("SIP_Report.pdf");
+  };
+
+  const investmentChart = new Chart(document.getElementById("investmentChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Invested Amount", "Estimated Returns"],
+      datasets: [{ data: [0, 0], backgroundColor: ["#22c55e", "#3b82f6"] }]
+    }
+  });
+
+  const growthChart = new Chart(document.getElementById("growthChart"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Total Value", data: [], borderColor: "#3b82f6" }] }
+  });
+
+  update();
+</script>
+</body>
 </html>
