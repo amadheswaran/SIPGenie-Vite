@@ -29,9 +29,9 @@ export default function Home() {
                 <span className="text-xl font-bold bg-gradient-to-r from-[hsl(162,100%,41%)] to-[hsl(207,90%,54%)] bg-clip-text text-transparent">SIPGenie</span>
               </div>
               <div className="hidden md:flex space-x-12 absolute left-1/2 transform -translate-x-1/2">
-                <a href="/sip-calculator" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Calculator</a>
-                <a href="/compare" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Compare</a>
-                <a href="/blog" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Blog</a>
+                <a href="/sip-calculator.html" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Calculator</a>
+                <a href="/compare.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Compare</a>
+                <a href="/blog/index.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">Blog</a>
               </div>
             </div>
             <div className="flex items-center">
@@ -51,21 +51,21 @@ export default function Home() {
           <div className="md:hidden bg-white border-t border-gray-100 shadow-lg animate-slide-up">
             <div className="px-4 py-3 space-y-3">
               <a 
-                href="/sip-calculator" 
+                href="/sip-calculator.html" 
                 className="block py-3 text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Calculator
               </a>
               <a 
-                href="/compare" 
+                href="/compare.html" 
                 className="block py-3 text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Compare
               </a>
               <a 
-                href="/blog" 
+                href="/blog/index.html" 
                 className="block py-3 text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
