@@ -2,168 +2,196 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SIP Calculator | SIPGenie</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Calculate SIP and Lumpsum investment growth with SIPGenie. Plan your wealth goals easily."/>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="bg-[hsl(220,14.3%,97%)] p-6">
+<body class="bg-gray-50 text-gray-800">
 
-  <!-- Calculator Root -->
-  <div id="calculatorRoot" class="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-    
-    <!-- Calculator Panel -->
-    <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow">
-      <div class="flex justify-center mb-8">
-        <div class="bg-gray-100 p-1 rounded-xl flex">
-          <button id="mode-sip" class="px-6 py-2 rounded-lg text-sm font-medium bg-white shadow-sm">SIP</button>
-          <button id="mode-lumpsum" class="px-6 py-2 rounded-lg text-sm font-medium text-gray-600">Lumpsum</button>
+  <!-- HEADER -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="/" class="text-2xl font-bold text-green-600">SIPGenie</a>
+      <nav class="space-x-6">
+        <a href="/" class="hover:text-green-600">Home</a>
+        <a href="/sip-calculator.html" class="text-green-600 font-semibold">Calculator</a>
+        <a href="/blog.html" class="hover:text-green-600">Blog</a>
+        <a href="/compare.html" class="hover:text-green-600">Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CALCULATOR -->
+  <main class="max-w-7xl mx-auto p-6">
+    <div id="pdf-export-section" class="grid lg:grid-cols-3 gap-8">
+      
+      <!-- Calculator Column -->
+      <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow">
+
+        <!-- Toggle -->
+        <div class="flex justify-center mb-6">
+          <div class="bg-gray-100 p-1 rounded-xl flex">
+            <button id="mode-sip" class="px-6 py-2 rounded-lg text-sm font-medium">SIP</button>
+            <button id="mode-lumpsum" class="px-6 py-2 rounded-lg text-sm font-medium">Lumpsum</button>
+          </div>
+        </div>
+
+        <!-- Monthly Investment -->
+        <label class="block mb-2 font-medium">Monthly Investment / Lumpsum Amount</label>
+        <input id="amount" type="number" min="500" max="1000000" value="25000" class="w-full p-3 border rounded mb-2"/>
+        <input id="amountSlider" type="range" min="500" max="100000" value="25000" class="w-full mb-4"/>
+
+        <!-- Return Rate -->
+        <label class="block mb-2 font-medium">Expected Return Rate (p.a)</label>
+        <input id="rate" type="number" min="1" max="30" step="0.1" value="12" class="w-full p-3 border rounded mb-2"/>
+        <input id="rateSlider" type="range" min="1" max="30" step="0.5" value="12" class="w-full mb-4"/>
+
+        <!-- Time Period -->
+        <label class="block mb-2 font-medium">Time Period (years)</label>
+        <input id="years" type="number" min="1" max="40" value="10" class="w-full p-3 border rounded mb-2"/>
+        <input id="yearsSlider" type="range" min="1" max="40" value="10" class="w-full mb-4"/>
+
+        <!-- Step Up -->
+        <label class="block mb-2 font-medium">Annual Step-up (%)</label>
+        <input id="stepup" type="number" min="0" max="30" step="0.1" value="0" class="w-full p-3 border rounded mb-2"/>
+        <input id="stepupSlider" type="range" min="0" max="30" step="0.1" value="0" class="w-full mb-4"/>
+      </div>
+
+      <!-- Summary Column -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl p-6 shadow">
+          <h3 class="text-lg font-semibold mb-4">Investment Summary</h3>
+          <p>Invested Amount: <span id="invested">₹0</span></p>
+          <p>Est. Returns: <span id="returns">₹0</span></p>
+          <p>Total Value: <span id="total">₹0</span></p>
+          <button id="downloadPDF" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Download PDF</button>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow">
+          <h3 class="text-lg font-semibold mb-4">Investment Breakdown</h3>
+          <canvas id="breakdownChart"></canvas>
         </div>
       </div>
-
-      <!-- Monthly Amount -->
-      <label class="block text-sm font-medium mb-3" id="amount-label">Monthly investment</label>
-      <div class="relative mb-6">
-        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">₹</span>
-        <input type="number" id="amount" min="500" max="10000000" value="25000" class="pl-8 pr-4 py-4 w-full border rounded-lg bg-gray-50">
-        <div class="mt-2 flex justify-between text-sm text-gray-500"><span>Min: ₹500</span><span>Max: ₹1 Cr</span></div>
-      </div>
-      <input type="range" id="amountSlider" min="500" max="100000" value="25000" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
-
-      <!-- Return Rate -->
-      <label class="block text-sm font-medium mb-3">Expected return rate (p.a)</label>
-      <div class="relative mb-6">
-        <input type="number" id="returnRate" min="1" max="30" step="0.1" value="12" class="pr-8 pl-4 py-4 w-full border rounded-lg bg-gray-50">
-        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">%</span>
-      </div>
-      <input type="range" id="returnSlider" min="1" max="30" step="0.5" value="12" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
-
-      <!-- Time Period -->
-      <label class="block text-sm font-medium mb-3">Time period</label>
-      <div class="relative mb-6">
-        <input type="number" id="timePeriod" min="1" max="40" value="10" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50">
-        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">Years</span>
-      </div>
-      <input type="range" id="timeSlider" min="1" max="40" value="10" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
-
-      <!-- Step-up -->
-      <label class="block text-sm font-medium mb-3">Annual Step-up (%)</label>
-      <input type="number" id="stepUp" min="0" max="30" step="0.1" value="0" class="pr-12 pl-4 py-4 w-full border rounded-lg bg-gray-50 mb-4">
-      <input type="range" id="stepUpSlider" min="0" max="30" step="0.1" value="0" class="w-full h-2 bg-gray-200 rounded-lg mb-8">
     </div>
 
-    <!-- Results -->
-    <div class="space-y-6">
-      <div class="bg-white p-6 rounded-xl shadow">
-        <h3 class="text-lg font-semibold mb-6">Investment Summary</h3>
-        <div class="flex justify-between p-4 bg-gray-50 rounded-xl"><span>Invested amount</span><span id="investedAmount">₹0</span></div>
-        <div class="flex justify-between p-4 bg-green-50 rounded-xl"><span>Est. returns</span><span id="returns" class="text-green-600">₹0</span></div>
-        <div class="flex justify-between p-4 bg-blue-50 rounded-xl"><span>Total value</span><span id="totalValue" class="text-blue-600 font-bold">₹0</span></div>
-        <button id="downloadPDF" class="bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 px-6 rounded-xl w-full mt-4">Download PDF</button>
-      </div>
-
-      <div class="bg-white p-6 rounded-xl shadow">
-        <h3 class="text-lg font-semibold mb-4">Investment Breakdown</h3>
-        <canvas id="investmentChart" height="200"></canvas>
-      </div>
+    <!-- Growth Chart -->
+    <div class="bg-white rounded-xl p-6 shadow mt-12">
+      <h3 class="text-lg font-semibold mb-4">Investment Growth Over Time</h3>
+      <canvas id="growthChart" height="200"></canvas>
     </div>
-  </div>
+  </main>
 
-  <!-- Growth Chart -->
-  <div class="bg-white p-6 rounded-xl shadow mt-12 max-w-7xl mx-auto">
-    <h3 class="text-lg font-semibold mb-4">Investment Growth Over Time</h3>
-    <canvas id="growthChart" height="200"></canvas>
-  </div>
+  <!-- FOOTER -->
+  <footer class="bg-gray-100 mt-12 py-6 text-center text-sm">
+    © 2025 SIPGenie. All rights reserved.
+  </footer>
 
-<script>
-  const { jsPDF } = window.jspdf;
+  <script>
+    let mode = 'sip';
 
-  let mode = 'sip';
-  let monthlyAmount = 25000;
-  let returnRate = 12;
-  let timePeriod = 10;
-  let stepUpPercent = 0;
+    function updateToggleUI() {
+      const sipBtn = document.getElementById("mode-sip");
+      const lumpsumBtn = document.getElementById("mode-lumpsum");
 
-  const investedAmountEl = document.getElementById("investedAmount");
-  const returnsEl = document.getElementById("returns");
-  const totalValueEl = document.getElementById("totalValue");
-
-  const formatCurrency = (num) => "₹" + num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
-
-  function calculateSIP(amount, rate, years, stepUp = 0) {
-    const monthlyRate = rate / 100 / 12;
-    const months = years * 12;
-    let currentP = amount, fv = 0, investedAmount = 0;
-    let yearlyData = [];
-
-    for (let m = 0; m < months; m++) {
-      fv = fv * (1 + monthlyRate) + currentP;
-      investedAmount += currentP;
-      if ((m + 1) % 12 === 0) {
-        yearlyData.push({ year: (m+1)/12, invested: investedAmount, totalValue: fv });
-        currentP *= (1 + stepUp / 100);
+      if (mode === "sip") {
+        sipBtn.classList.add("bg-white", "shadow-sm", "text-black");
+        sipBtn.classList.remove("text-gray-600");
+        lumpsumBtn.classList.add("text-gray-600");
+        lumpsumBtn.classList.remove("bg-white", "shadow-sm", "text-black");
+      } else {
+        lumpsumBtn.classList.add("bg-white", "shadow-sm", "text-black");
+        lumpsumBtn.classList.remove("text-gray-600");
+        sipBtn.classList.add("text-gray-600");
+        sipBtn.classList.remove("bg-white", "shadow-sm", "text-black");
       }
     }
-    return { investedAmount, estimatedReturns: fv - investedAmount, totalValue: fv, yearlyData };
-  }
 
-  function calculateLumpsum(amount, rate, years) {
-    const fv = amount * Math.pow(1 + rate/100, years);
-    let yearlyData = [];
-    for (let y=1; y<=years; y++) yearlyData.push({ year: y, invested: amount, totalValue: amount * Math.pow(1 + rate/100, y) });
-    return { investedAmount: amount, estimatedReturns: fv - amount, totalValue: fv, yearlyData };
-  }
+    function calculate() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const rate = parseFloat(document.getElementById("rate").value);
+      const years = parseInt(document.getElementById("years").value);
+      const stepup = parseFloat(document.getElementById("stepup").value);
 
-  function update() {
-    const res = mode === 'sip' ? calculateSIP(monthlyAmount, returnRate, timePeriod, stepUpPercent) : calculateLumpsum(monthlyAmount, returnRate, timePeriod);
-    investedAmountEl.textContent = formatCurrency(res.investedAmount);
-    returnsEl.textContent = formatCurrency(res.estimatedReturns);
-    totalValueEl.textContent = formatCurrency(res.totalValue);
-    investmentChart.data.datasets[0].data = [res.investedAmount, res.estimatedReturns];
-    investmentChart.update();
-    growthChart.data.labels = res.yearlyData.map(y => `Year ${y.year}`);
-    growthChart.data.datasets[0].data = res.yearlyData.map(y => y.totalValue);
-    growthChart.update();
-  }
+      let invested = 0, totalValue = 0, yearlyData = [];
 
-  document.getElementById("mode-sip").onclick = () => { mode='sip'; update(); };
-  document.getElementById("mode-lumpsum").onclick = () => { mode='lumpsum'; update(); };
-  document.getElementById("amount").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amountSlider").value = monthlyAmount; update(); };
-  document.getElementById("amountSlider").oninput = e => { monthlyAmount = +e.target.value; document.getElementById("amount").value = monthlyAmount; update(); };
-  document.getElementById("returnRate").oninput = e => { returnRate = +e.target.value; document.getElementById("returnSlider").value = returnRate; update(); };
-  document.getElementById("returnSlider").oninput = e => { returnRate = +e.target.value; document.getElementById("returnRate").value = returnRate; update(); };
-  document.getElementById("timePeriod").oninput = e => { timePeriod = +e.target.value; document.getElementById("timeSlider").value = timePeriod; update(); };
-  document.getElementById("timeSlider").oninput = e => { timePeriod = +e.target.value; document.getElementById("timePeriod").value = timePeriod; update(); };
-  document.getElementById("stepUp").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUpSlider").value = stepUpPercent; update(); };
-  document.getElementById("stepUpSlider").oninput = e => { stepUpPercent = +e.target.value; document.getElementById("stepUp").value = stepUpPercent; update(); };
+      if (mode === "sip") {
+        let monthlyRate = rate / 100 / 12;
+        let currentP = amount;
+        for (let m = 0; m < years * 12; m++) {
+          totalValue = totalValue * (1 + monthlyRate) + currentP;
+          invested += currentP;
+          if ((m + 1) % 12 === 0) {
+            yearlyData.push({ year: (m + 1) / 12, value: totalValue });
+            currentP *= 1 + stepup / 100;
+          }
+        }
+      } else {
+        totalValue = amount * Math.pow(1 + rate / 100, years);
+        invested = amount;
+        for (let y = 1; y <= years; y++) {
+          yearlyData.push({ year: y, value: amount * Math.pow(1 + rate / 100, y) });
+        }
+      }
 
-  document.getElementById("downloadPDF").onclick = async () => {
-    const element = document.getElementById("calculatorRoot");
-    const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save("SIP_Report.pdf");
-  };
+      document.getElementById("invested").innerText = "₹" + invested.toLocaleString();
+      document.getElementById("returns").innerText = "₹" + (totalValue - invested).toLocaleString();
+      document.getElementById("total").innerText = "₹" + totalValue.toLocaleString();
 
-  const investmentChart = new Chart(document.getElementById("investmentChart"), {
-    type: "doughnut",
-    data: {
-      labels: ["Invested Amount", "Estimated Returns"],
-      datasets: [{ data: [0, 0], backgroundColor: ["#22c55e", "#3b82f6"] }]
+      renderCharts(invested, totalValue - invested, yearlyData);
     }
-  });
 
-  const growthChart = new Chart(document.getElementById("growthChart"), {
-    type: "line",
-    data: { labels: [], datasets: [{ label: "Total Value", data: [], borderColor: "#3b82f6" }] }
-  });
+    function renderCharts(invested, returns, yearlyData) {
+      new Chart(document.getElementById("breakdownChart"), {
+        type: "doughnut",
+        data: { labels: ["Invested", "Returns"], datasets: [{ data: [invested, returns], backgroundColor: ["#10B981", "#3B82F6"] }] }
+      });
 
-  update();
-</script>
+      new Chart(document.getElementById("growthChart"), {
+        type: "line",
+        data: { labels: yearlyData.map(d => "Year " + d.year), datasets: [{ label: "Value", data: yearlyData.map(d => d.value), borderColor: "#3B82F6" }] }
+      });
+    }
+
+    document.getElementById("mode-sip").onclick = () => { mode = 'sip'; updateToggleUI(); calculate(); };
+    document.getElementById("mode-lumpsum").onclick = () => { mode = 'lumpsum'; updateToggleUI(); calculate(); };
+
+    document.querySelectorAll("#amount, #rate, #years, #stepup, #amountSlider, #rateSlider, #yearsSlider, #stepupSlider").forEach(el => {
+      el.addEventListener("input", e => {
+        const id = e.target.id.replace("Slider", "");
+        document.getElementById(id).value = e.target.value;
+        document.getElementById(id + "Slider").value = e.target.value;
+        calculate();
+      });
+    });
+
+    document.getElementById("downloadPDF").onclick = async () => {
+      const { jsPDF } = window.jspdf;
+      const element = document.getElementById("pdf-export-section");
+      const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = (canvas.height * width) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, width, height);
+
+      pdf.addPage();
+      pdf.setFontSize(16);
+      pdf.text("SIPGenie — Investment Summary", 10, 20);
+      pdf.setFontSize(12);
+      pdf.text(`Mode: ${mode}`, 10, 30);
+      pdf.text(`Invested Amount: ${document.getElementById("invested").innerText}`, 10, 40);
+      pdf.text(`Returns: ${document.getElementById("returns").innerText}`, 10, 50);
+      pdf.text(`Total Value: ${document.getElementById("total").innerText}`, 10, 60);
+
+      pdf.save("SIP_Report.pdf");
+    };
+
+    updateToggleUI();
+    calculate();
+  </script>
 </body>
 </html>
