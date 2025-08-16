@@ -5,4 +5,4 @@ Allow: /
 Disallow: /404
 Disallow: /404.html
 
-Sitemap: https://sip-genie-vite.vercel.app/sitemap.xml
+Sitemap: http://sipgenie.in/sitemap.xml
