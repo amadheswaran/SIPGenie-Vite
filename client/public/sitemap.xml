@@ -2,41 +2,41 @@
 <urlset
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://sip-genie-vite.vercel.app/</loc>
+    <loc>http://sipgenie.in/</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://sip-genie-vite.vercel.app/sip-calculator</loc>
+    <loc>http://sipgenie.in/sip-calculator</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://sip-genie-vite.vercel.app/compare</loc>
+    <loc>http://sipgenie.in/compare</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://sip-genie-vite.vercel.app/blog</loc>
+    <loc>http://sipgenie.in/blog</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sip-genie-vite.vercel.app/privacy-policy</loc>
+    <loc>http://sipgenie.in/privacy-policy</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>yearly</changefreq>
   </url>
   <url>
-    <loc>https://sip-genie-vite.vercel.app/terms</loc>
+    <loc>http://sipgenie.in/terms</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>yearly</changefreq>
   </url>
   <url>
-    <loc>https://sip-genie-vite.vercel.app/disclaimer</loc>
+    <loc>http://sipgenie.in/disclaimer</loc>
     <lastmod>2025-08-15</lastmod>
     <changefreq>yearly</changefreq>
   </url>
