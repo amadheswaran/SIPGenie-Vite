@@ -10,7 +10,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { path: '/sip-calculator.html', label: 'Calculator' },
+    { path: '/', label: 'Calculator' },
     { path: '/compare', label: 'Compare' },
     { path: '/blog', label: 'Blog' }
   ];
@@ -33,7 +33,7 @@ export default function Header() {
                    </a>
               </div>
               <div className="hidden md:flex space-x-12 absolute left-1/2 transform -translate-x-1/2">
-                <a href="/sip-calculator" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
+                <a href="/" className="text-lg font-bold text-[hsl(224,71.4%,4.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
                   Calculator
                 </a>
                 <a href="/compare/index.html" className="text-lg font-bold text-[hsl(220,8.9%,46.1%)] hover:text-[hsl(162,100%,41%)] transition-all transform hover:scale-105">
