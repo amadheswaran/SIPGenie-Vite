@@ -63,7 +63,7 @@
   <header>
     <div class="logo max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"><a href="/" style="text-decoration:none;color:#000;font-weight:bold;font-size:1.2rem;">
         <img 
-        src="https://sip-genie-vite.vercel.app/sipgenie-logo.png" 
+        src="/sipgenie-logo.png" 
         alt="SIP Genie Logo" 
     	style="height: 60px;"
       />
@@ -142,5 +142,30 @@
 <footer>
   <div>© 2025 SIPGenie. All rights reserved. | <a href="/privacy-policy.html">Privacy Policy</a> | <a href="/terms.html">Terms</a></div>
 </footer>
+
+    <script>
+  (function () {
+  // Pull GA ID from environment variable (injected at build time by Vercel)
+  var GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXX"; // fallback if missing
+
+  // Inject Google Analytics gtag script
+  var gtagScript = document.createElement("script");
+  gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+  gtagScript.async = true;
+  document.head.appendChild(gtagScript);
+
+  // Setup gtag
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag = gtag;
+  gtag("js", new Date());
+  gtag("config", GA_ID);
+})();
+</script>
+
+<!-- Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script defer src="/ga.js"></script>
 </body>
 </html>
