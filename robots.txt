@@ -5,4 +5,4 @@ Allow: /
 Disallow: /404
 Disallow: /404.html
 
-Sitemap: http://sipgenie.in/sitemap.xml
+Sitemap: https://sipgenie.in/sitemap.xml
