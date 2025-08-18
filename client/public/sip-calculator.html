@@ -275,5 +275,30 @@
 
   update();
 </script>
+
+    <script>
+  (function () {
+  // Pull GA ID from environment variable (injected at build time by Vercel)
+  var GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXX"; // fallback if missing
+
+  // Inject Google Analytics gtag script
+  var gtagScript = document.createElement("script");
+  gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+  gtagScript.async = true;
+  document.head.appendChild(gtagScript);
+
+  // Setup gtag
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag = gtag;
+  gtag("js", new Date());
+  gtag("config", GA_ID);
+})();
+</script>
+
+<!-- Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script defer src="/ga.js"></script>
 </body>
 </html>
