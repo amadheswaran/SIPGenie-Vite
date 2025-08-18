@@ -8,16 +8,19 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 text-gray-800">
-  <!-- Header -->
-  <header class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-      <a href="/" class="text-2xl font-bold text-green-600">SIPGenie</a>
-      <nav class="space-x-6">
-        <a href="/" class="hover:text-green-600">Calculator</a>
-        <a href="/compare.html" class="hover:text-green-600">Compare</a>
-        <a href="/blog/index.html" class="hover:text-green-600">Blog</a>
-      </nav>
-    </div>
+  <header>
+    <div class="logo max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"><a href="/" style="text-decoration:none;color:#000;font-weight:bold;font-size:1.2rem;">
+        <img 
+        src="/sipgenie-logo.png" 
+        alt="SIP Genie Logo" 
+    	style="height: 60px;"
+      />
+    </a></div>
+    <nav class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="/">Calculator</a>
+      <a href="/compare.html">Compare</a>
+      <a href="/blog/index.html">Blog</a>
+    </nav>
   </header>
 
   <!-- Main Content -->
@@ -95,5 +98,32 @@
     <a href="/terms.html" class="text-green-600 hover:underline">Terms of Service</a> | 
     <a href="/disclaimer.html" class="text-green-600 hover:underline">Disclaimer</a>
   </footer>
+
+  <script>
+    (function () {
+  // Pull GA ID from environment variable (injected at build time by Vercel)
+  var GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXX"; // fallback if missing
+
+  // Inject Google Analytics gtag script
+  var gtagScript = document.createElement("script");
+  gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+  gtagScript.async = true;
+  document.head.appendChild(gtagScript);
+
+  // Setup gtag
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag = gtag;
+  gtag("js", new Date());
+  gtag("config", GA_ID);
+})();
+  </script>
+
+<!-- Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script defer src="/ga.js"></script>
+
+  
 </body>
 </html>
