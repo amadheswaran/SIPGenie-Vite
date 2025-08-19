@@ -388,7 +388,7 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
               </div>
               
               <div className="flex justify-between items-center p-4 bg-[hsl(162,100%,41%)]/5 rounded-xl">
-                <span className="text-sm text-[hsl(220,8.9%,46.1%)]">Est. returns</span>
+                <span className="text-sm text-[hsl(220,8.9%,46.1%)]">Estimated returns</span>
                 <span className="font-semibold text-[hsl(162,100%,41%)]" data-testid="text-estimated-returns">
                   {formatCurrency(results.estimatedReturns)}
                 </span>
@@ -428,6 +428,9 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
         </Card>
       </div>
 
+       {/* Disclaimer */}
+      <p class="text-lg lg:text-xl font-semibold text-[hsl(224,71.4%,4.1%)] mb-4 italic text-center text-red-50" style="font-style: italic;color: red;">* Investments are subject to market risks, and results from this calculator are estimates only but not guarantees, as past performance is not an indicator of future results.</p>
+      
       {/* Growth Chart Section */}
       <div className="lg:col-span-3 mt-16">
         <div className="text-center mb-12">
