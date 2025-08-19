@@ -430,15 +430,14 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
 
        {/* Disclaimer */}
 
-          <div>
+          <div  className="lg:col-span-3">
       <p className="text-lg lg:text-xl font-semibold text-[hsl(224,71.4%,4.1%)] mb-4 italic text-center text-red-50" style={{ fontStyle: "italic", color: "red" }} >
-* Investments are subject to market risks, and results from this calculator are estimates only but not guarantees, as past performance is not an indicator of future results.
+* Investments are subject to market risks and results from this calculator are estimates only but not guarantees, as past performance is not an indicator of future results.
     </p>
     </div>
 
-    
       {/* Growth Chart Section */}
-      <div className="lg:col-span-3 mt-16">
+      <div className="lg:col-span-3 mt-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-[hsl(224,71.4%,4.1%)] mb-4" data-testid="text-growth-title">Investment Growth Over Time</h2>
           <p className="text-[hsl(220,8.9%,46.1%)]">See how your investment grows year by year</p>
