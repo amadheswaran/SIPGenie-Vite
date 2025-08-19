@@ -149,7 +149,7 @@
     <script>
   (function () {
   // Pull GA ID from environment variable (injected at build time by Vercel)
-  var GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXX"; // fallback if missing
+  var GA_ID = "G-L0BDBFVDZY"; // fallback if missing
 
   // Inject Google Analytics gtag script
   var gtagScript = document.createElement("script");
@@ -163,9 +163,6 @@
   window.gtag = gtag;
   gtag("js", new Date());
   gtag("config", GA_ID);
-    console.log(GA_ID);
-    
-    console.log(process.env.NEXT_PUBLIC_GA_ID);
 })();
 </script>
 
@@ -175,6 +172,7 @@
 <script defer src="/ga.js"></script>
 </body>
 </html>
+
 
 
 
