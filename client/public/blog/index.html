@@ -163,6 +163,9 @@
   window.gtag = gtag;
   gtag("js", new Date());
   gtag("config", GA_ID);
+    console.log(GA_ID);
+    
+    console.log(process.env.NEXT_PUBLIC_GA_ID);
 })();
 </script>
 
@@ -172,6 +175,7 @@
 <script defer src="/ga.js"></script>
 </body>
 </html>
+
 
 
 
