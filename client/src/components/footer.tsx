@@ -11,8 +11,8 @@ export default function Footer() {
 
   const navItems = [
     { path: '/sip-calculator', label: 'Calculator' },
-    { path: '/compare', label: 'Compare' },
-    { path: '/blog', label: 'Blog' }
+    { path: '/compare.html', label: 'Compare' },
+    { path: '/blog/index.html', label: 'Blog' }
   ];
 
   return (
