@@ -6,11 +6,11 @@ import FAQSection from "@/components/faq-section";
 
 export default function Home() {
   useEffect(() => {
-    document.title = 'Home — SIPGenie';
+    document.title = 'SIP Calculator - Systematic Investment Plan Online';
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute('content', 'SIPGenie — smart SIP calculator and comparison tools');
+    if (meta) meta.setAttribute('content', 'A Systematic Investment Plan (SIP) is about investing a small sum at regular intervals (generally each month) in an investment vehicle like mutual funds or stocks');
     const kw = document.querySelector('meta[name="keywords"]');
-    if (kw) kw.setAttribute('content', 'SIP calculator, compare SIP, mutual funds, SIP calculator India');
+    if (kw) kw.setAttribute('content', 'SIP calculator, compare SIP, mutual funds, SIP calculator India, SIP vs FD, SBI SIP');
   }, []);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
