@@ -452,9 +452,9 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
                 <div className="bg-white rounded-xl p-4 shadow-sm">
                   <h4 className="text-lg font-semibold mb-3">Related Calculators</h4>
                   <ul className="space-y-2 text-[hsl(220,8.9%,46.1%)]">
-                    <li><a href="/ppf" className="text-[hsl(162,100%,41%)] hover:underline">PPF Calculator</a></li>
-                    <li><a href="/goal-calculator" className="text-[hsl(162,100%,41%)] hover:underline">Goal Calculator</a></li>
-                    <li><a href="/sip-vs-lumpsum" className="text-[hsl(162,100%,41%)] hover:underline">SIP vs Lumpsum</a></li>
+                    <li><a href="#" className="text-[hsl(162,100%,41%)] hover:underline">PPF Calculator</a></li>
+                    <li><a href="#" className="text-[hsl(162,100%,41%)] hover:underline">Goal Calculator</a></li>
+                    <li><a href="/sip-calculator.html" className="text-[hsl(162,100%,41%)] hover:underline">SIP vs Lumpsum</a></li>
                   </ul>
                 </div>
               </aside>
