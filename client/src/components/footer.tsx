@@ -10,7 +10,7 @@ export default function Footer() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { path: '/sip-calculator', label: 'Calculator' },
+    { path: '/', label: 'Calculator' },
     { path: '/compare.html', label: 'Compare' },
     { path: '/blog/index.html', label: 'Blog' }
   ];
