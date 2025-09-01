@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, FileText } from "lucide-react";
+import { Download } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import InvestmentChart from "./investment-chart";
@@ -22,13 +22,15 @@ interface CalculationResult {
   }>;
 }
 
-/* ----------------- Helpers ----------------- */
+/** ---------- Helpers ---------- */
 const toNumber = (v: string, fallback = 0) => {
   const n = parseFloat(v);
   return Number.isFinite(n) ? n : fallback;
 };
-const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
-const formatCurrency = (amount: number) =>
+
+const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
+
+const formatCurrency = (amount: number): string =>
   "₹" + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 const updateSliderBackground = (sliderId: string, value: number, min: number, max: number) => {
@@ -38,8 +40,7 @@ const updateSliderBackground = (sliderId: string, value: number, min: number, ma
   slider.style.background = `linear-gradient(to right, hsl(162,100%,41%) 0%, hsl(162,100%,41%) ${pct}%, hsl(220,13%,91%) ${pct}%, hsl(220,13%,91%) 100%)`;
 };
 
-/* ----------------- Calculators ----------------- */
-// SIP: month by month with annual step-up
+/** ---------- Calculations ---------- */
 const calculateSIP = (
   monthlyAmount: number,
   rate: number,
@@ -56,12 +57,18 @@ const calculateSIP = (
   for (let m = 0; m < months; m++) {
     fv = fv * (1 + monthlyRate) + currentP;
     investedAmount += currentP;
+
     if ((m + 1) % 12 === 0) {
       const year = Math.round((m + 1) / 12);
-      yearlyData.push({ year, invested: Math.round(investedAmount), totalValue: Math.round(fv) });
+      yearlyData.push({
+        year,
+        invested: Math.round(investedAmount),
+        totalValue: Math.round(fv),
+      });
       if (stepUpPercent > 0) currentP = +(currentP * (1 + stepUpPercent / 100));
     }
   }
+
   const estimatedReturns = Math.round(fv - investedAmount);
   return {
     investedAmount: Math.round(investedAmount),
@@ -71,14 +78,16 @@ const calculateSIP = (
   };
 };
 
-// Lumpsum: compound annually
 const calculateLumpsum = (amount: number, rate: number, years: number): CalculationResult => {
   const futureValue = amount * Math.pow(1 + rate / 100, years);
   const estimatedReturns = futureValue - amount;
+
   const yearlyData: CalculationResult["yearlyData"] = [];
   for (let year = 1; year <= years; year++) {
-    yearlyData.push({ year, invested: amount, totalValue: amount * Math.pow(1 + rate / 100, year) });
+    const yearFutureValue = amount * Math.pow(1 + rate / 100, year);
+    yearlyData.push({ year, invested: amount, totalValue: yearFutureValue });
   }
+
   return {
     investedAmount: amount,
     estimatedReturns,
@@ -87,21 +96,22 @@ const calculateLumpsum = (amount: number, rate: number, years: number): Calculat
   };
 };
 
-// FD: quarterly compounding (n=4)
+// FD with quarterly compounding (India standard)
 const calculateFD = (principal: number, rate: number, years: number): CalculationResult => {
   const m = 4; // quarterly
   const r = rate / 100;
-  const nPeriods = years * m;
+  const n = years * m;
   const periodRate = r / m;
-  const totalValue = principal * Math.pow(1 + periodRate, nPeriods);
+  const totalValue = principal * Math.pow(1 + periodRate, n);
   const estimatedReturns = totalValue - principal;
 
   const yearlyData: CalculationResult["yearlyData"] = [];
-  for (let y = 1; y <= years; y++) {
-    const yPeriods = y * m;
+  for (let year = 1; year <= years; year++) {
+    const yPeriods = year * m;
     const yValue = principal * Math.pow(1 + periodRate, yPeriods);
-    yearlyData.push({ year: y, invested: principal, totalValue: yValue });
+    yearlyData.push({ year, invested: principal, totalValue: yValue });
   }
+
   return {
     investedAmount: principal,
     estimatedReturns,
@@ -110,217 +120,120 @@ const calculateFD = (principal: number, rate: number, years: number): Calculatio
   };
 };
 
-/* ----------------- Component ----------------- */
-export default function SIPCalculator() {
-  /* ---------- Primary scenario (A) state — strings to preserve backspace behavior ---------- */
-  const [modeA, setModeA] = useState<CalculatorMode>("sip");
-  const [amountA, setAmountA] = useState<string>("25000");
-  const [rateA, setRateA] = useState<string>("12");
-  const [yearsA, setYearsA] = useState<string>("10");
-  const [stepA, setStepA] = useState<string>("0");
-
-  /* ---------- Secondary scenario (B) for comparison ---------- */
-  const [compareOpen, setCompareOpen] = useState<boolean>(false);
-  const [modeB, setModeB] = useState<CalculatorMode>("lumpsum");
-  const [amountB, setAmountB] = useState<string>("100000");
-  const [rateB, setRateB] = useState<string>("7");
-  const [yearsB, setYearsB] = useState<string>("10");
-  const [stepB, setStepB] = useState<string>("0");
-
-  /* ---------- Sanitized numeric values (memoized) ---------- */
-  const amtA = useMemo(() => clamp(toNumber(amountA, 0), 0, 10_000_000), [amountA]);
-  const rA = useMemo(() => clamp(toNumber(rateA, 0), 0, 30), [rateA]);
-  const yrsA = useMemo(() => clamp(Math.round(toNumber(yearsA, 0)), 0, 40), [yearsA]);
-  const stpA = useMemo(() => clamp(toNumber(stepA, 0), 0, 30), [stepA]);
-
-  const amtB = useMemo(() => clamp(toNumber(amountB, 0), 0, 10_000_000), [amountB]);
-  const rB = useMemo(() => clamp(toNumber(rateB, 0), 0, 30), [rateB]);
-  const yrsB = useMemo(() => clamp(Math.round(toNumber(yearsB, 0)), 0, 40), [yearsB]);
-  const stpB = useMemo(() => clamp(toNumber(stepB, 0), 0, 30), [stepB]);
-
-  /* ---------- Results state ---------- */
-  const [resultsA, setResultsA] = useState<CalculationResult>({
-    investedAmount: 0,
-    estimatedReturns: 0,
-    totalValue: 0,
-    yearlyData: [],
-  });
-  const [resultsB, setResultsB] = useState<CalculationResult>({
-    investedAmount: 0,
-    estimatedReturns: 0,
-    totalValue: 0,
-    yearlyData: [],
-  });
-
-  /* ---------- Effects to recalc A & B ---------- */
-  useEffect(() => {
-    let r: CalculationResult;
-    if (modeA === "sip") r = calculateSIP(amtA, rA, yrsA, stpA);
-    else if (modeA === "fd") r = calculateFD(amtA, rA, yrsA);
-    else r = calculateLumpsum(amtA, rA, yrsA);
-    setResultsA(r);
-
-    // sliders A
-    updateSliderBackground("amountSliderA", amtA || 0, 500, 100000);
-    updateSliderBackground("returnSliderA", rA || 0, 1, 30);
-    updateSliderBackground("timeSliderA", yrsA || 0, 1, 40);
-    updateSliderBackground("stepUpSliderA", stpA || 0, 0, 30);
-  }, [amtA, rA, yrsA, stpA, modeA]);
-
-  useEffect(() => {
-    if (!compareOpen) return;
-    let r: CalculationResult;
-    if (modeB === "sip") r = calculateSIP(amtB, rB, yrsB, stpB);
-    else if (modeB === "fd") r = calculateFD(amtB, rB, yrsB);
-    else r = calculateLumpsum(amtB, rB, yrsB);
-    setResultsB(r);
-
-    // sliders B
-    updateSliderBackground("amountSliderB", amtB || 0, 500, 100000);
-    updateSliderBackground("returnSliderB", rB || 0, 1, 30);
-    updateSliderBackground("timeSliderB", yrsB || 0, 1, 40);
-    updateSliderBackground("stepUpSliderB", stpB || 0, 0, 30);
-  }, [amtB, rB, yrsB, stpB, modeB, compareOpen]);
-
-  /* ---------- Blur handlers to prettify and clamp (A) ---------- */
-  const onAmountABlur = () => {
-    if (amountA.trim() === "") return;
-    const cl = clamp(Math.round(toNumber(amountA, 0)), 500, 10_000_000);
-    setAmountA(String(cl));
-  };
-  const onRateABlur = () => {
-    if (rateA.trim() === "") return;
-    const cl = clamp(toNumber(rateA, 0), 1, 30);
-    setRateA(cl.toFixed(1));
-  };
-  const onYearsABlur = () => {
-    if (yearsA.trim() === "") return;
-    const cl = clamp(Math.round(toNumber(yearsA, 0)), 1, 40);
-    setYearsA(String(cl));
-  };
-  const onStepABlur = () => {
-    if (stepA.trim() === "") return;
-    const cl = clamp(toNumber(stepA, 0), 0, 30);
-    setStepA(cl.toFixed(1));
-  };
-
-  /* ---------- Blur handlers for B ---------- */
-  const onAmountBBlur = () => {
-    if (amountB.trim() === "") return;
-    const cl = clamp(Math.round(toNumber(amountB, 0)), 500, 10_000_000);
-    setAmountB(String(cl));
-  };
-  const onRateBBlur = () => {
-    if (rateB.trim() === "") return;
-    const cl = clamp(toNumber(rateB, 0), 1, 30);
-    setRateB(cl.toFixed(1));
-  };
-  const onYearsBBlur = () => {
-    if (yearsB.trim() === "") return;
-    const cl = clamp(Math.round(toNumber(yearsB, 0)), 1, 40);
-    setYearsB(String(cl));
-  };
-  const onStepBBlur = () => {
-    if (stepB.trim() === "") return;
-    const cl = clamp(toNumber(stepB, 0), 0, 30);
-    setStepB(cl.toFixed(1));
-  };
-
-  /* ---------- Investment Goal Calculator (SIP only) ----------
-     Estimate how many years required (simulation) to reach target wealth given monthly SIP, rate, step-up
-  */
-  const estimateYearsToGoal = (monthly: number, rate: number, stepUp: number, goal: number, maxYears = 60) => {
-    if (!monthly || monthly <= 0 || goal <= 0) return null;
-    let currentP = monthly;
-    let fv = 0;
-    const monthlyRate = rate / 100 / 12;
-    const maxMonths = maxYears * 12;
-    for (let m = 0; m < maxMonths; m++) {
-      fv = fv * (1 + monthlyRate) + currentP;
-      if ((m + 1) % 12 === 0 && stepUp > 0) currentP = +(currentP * (1 + stepUp / 100));
-      if (fv >= goal) {
-        const years = Math.ceil((m + 1) / 12);
-        return years;
-      }
+/** ---------- Goal estimate utility ---------- */
+/**
+ * Simulate SIP monthly with annual step-up to see when target >= goal.
+ * Returns years (integer) or null if not reached within maxYears.
+ */
+const estimateYearsToGoal = (
+  monthly: number,
+  rate: number,
+  stepUpPercent: number,
+  goal: number,
+  maxYears = 60
+): number | null => {
+  if (!monthly || monthly <= 0 || goal <= 0) return null;
+  const monthlyRate = rate / 100 / 12;
+  let currentP = monthly;
+  let fv = 0;
+  const maxMonths = maxYears * 12;
+  for (let m = 0; m < maxMonths; m++) {
+    fv = fv * (1 + monthlyRate) + currentP;
+    if ((m + 1) % 12 === 0 && stepUpPercent > 0) {
+      currentP = +(currentP * (1 + stepUpPercent / 100));
     }
-    return null;
-  };
+    if (fv >= goal) {
+      return Math.ceil((m + 1) / 12);
+    }
+  }
+  return null;
+};
 
-  const [goalInput, setGoalInput] = useState<string>("10000000"); // ₹1 Cr default
+export default function SIPCalculator() {
+  /** ---------- UI State (strings to fix backspace=0) ---------- */
+  const [mode, setMode] = useState<CalculatorMode>("sip");
+
+  const [amountInput, setAmountInput] = useState<string>("25000"); // monthly (SIP) or principal (FD/Lumpsum)
+  const [rateInput, setRateInput] = useState<string>("12");
+  const [yearsInput, setYearsInput] = useState<string>("10");
+  const [stepInput, setStepInput] = useState<string>("0"); // SIP only
+
+  // Goal states
+  const [goalInput, setGoalInput] = useState<string>("10000000"); // default ₹1 Cr
   const [goalYearsResult, setGoalYearsResult] = useState<number | null>(null);
 
+  // Sanitized numeric values used for calculations/graphs
+  const amount = useMemo(() => clamp(toNumber(amountInput, 0), 0, 10_000_000), [amountInput]);
+  const rate = useMemo(() => clamp(toNumber(rateInput, 0), 0, 30), [rateInput]);
+  const years = useMemo(() => clamp(Math.round(toNumber(yearsInput, 0)), 0, 40), [yearsInput]);
+  const stepUpPercent = useMemo(() => clamp(toNumber(stepInput, 0), 0, 30), [stepInput]);
+  const goalValue = useMemo(() => clamp(toNumber(goalInput, 0), 0, 1_000_000_000), [goalInput]);
+
+  const [results, setResults] = useState<CalculationResult>({
+    investedAmount: 0,
+    estimatedReturns: 0,
+    totalValue: 0,
+    yearlyData: [],
+  });
+
+  /** ---------- Effects ---------- */
   useEffect(() => {
-    // run only for SIP scenario A (we'll support SIP mode)
-    if (modeA !== "sip") {
+    let res: CalculationResult;
+    if (mode === "sip") res = calculateSIP(amount, rate, years, stepUpPercent);
+    else if (mode === "fd") res = calculateFD(amount, rate, years);
+    else res = calculateLumpsum(amount, rate, years);
+
+    setResults(res);
+
+    // Slider backgrounds
+    updateSliderBackground("amountSlider", amount, 500, 100000);
+    updateSliderBackground("returnSlider", rate, 1, 30);
+    updateSliderBackground("timeSlider", years, 1, 40);
+    updateSliderBackground("stepUpSlider", stepUpPercent, 0, 30);
+  }, [amount, rate, years, stepUpPercent, mode]);
+
+  // Goal calculation effect (only applicable when mode === 'sip')
+  useEffect(() => {
+    if (mode !== "sip") {
       setGoalYearsResult(null);
       return;
     }
-    const goalVal = toNumber(goalInput, 0);
-    const yearsNeeded = estimateYearsToGoal(amtA, rA, stpA, goalVal, 60);
-    setGoalYearsResult(yearsNeeded);
-  }, [goalInput, amtA, rA, stpA, modeA]);
-
-  /* ---------- CSV Export ---------- */
-  const downloadCSV = (which: "A" | "B" | "both" = "A") => {
-    const toCSVRows = (data: CalculationResult["yearlyData"], label = "Scenario") => {
-      const rows = [["Year", `${label} Invested`, `${label} TotalValue`]];
-      data.forEach((d) => rows.push([String(d.year), String(d.invested), String(Math.round(d.totalValue))]));
-      return rows.map((r) => r.join(",")).join("\n");
-    };
-
-    let csv = "";
-    if (which === "A") csv = toCSVRows(resultsA.yearlyData, "A");
-    else if (which === "B") csv = toCSVRows(resultsB.yearlyData, "B");
-    else {
-      // merge A and B by year (max length)
-      const maxLen = Math.max(resultsA.yearlyData.length, resultsB.yearlyData.length);
-      const lines = [["Year", "A Invested", "A TotalValue", "B Invested", "B TotalValue"]];
-      for (let i = 0; i < maxLen; i++) {
-        const a = resultsA.yearlyData[i];
-        const b = resultsB.yearlyData[i];
-        lines.push([
-          String(i + 1),
-          a ? String(a.invested) : "",
-          a ? String(Math.round(a.totalValue)) : "",
-          b ? String(b.invested) : "",
-          b ? String(Math.round(b.totalValue)) : "",
-        ]);
-      }
-      csv = lines.map((r) => r.join(",")).join("\n");
+    if (!goalValue || goalValue <= 0) {
+      setGoalYearsResult(null);
+      return;
     }
+    const yearsNeeded = estimateYearsToGoal(amount, rate, stepUpPercent, goalValue, 60);
+    setGoalYearsResult(yearsNeeded);
+  }, [goalValue, amount, rate, stepUpPercent, mode]);
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = which === "A" ? "sipgenie_A.csv" : which === "B" ? "sipgenie_B.csv" : "sipgenie_compare.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+  /** ---------- Blur handlers to clamp + pretty format ---------- */
+  const onAmountBlur = () => {
+    if (amountInput === "") return; // allow blank if user leaves it empty; we'll calculate as 0
+    const c = clamp(toNumber(amountInput, 0), 500, 10_000_000);
+    setAmountInput(String(Math.round(c)));
+  };
+  const onRateBlur = () => {
+    if (rateInput === "") return;
+    const c = clamp(toNumber(rateInput, 0), 1, 30);
+    setRateInput(c.toFixed(1));
+  };
+  const onYearsBlur = () => {
+    if (yearsInput === "") return;
+    const c = clamp(Math.round(toNumber(yearsInput, 0)), 1, 40);
+    setYearsInput(String(c));
+  };
+  const onStepBlur = () => {
+    if (stepInput === "") return;
+    const c = clamp(toNumber(stepInput, 0), 0, 30);
+    setStepInput(c.toFixed(1));
+  };
+  const onGoalBlur = () => {
+    if (goalInput === "") return;
+    const c = clamp(toNumber(goalInput, 0), 0, 1_000_000_000);
+    setGoalInput(String(Math.round(c)));
   };
 
-  /* ---------- Share Buttons ---------- */
-  const shareTextFor = (which: "A" | "B") => {
-    const res = which === "A" ? resultsA : resultsB;
-    const mode = which === "A" ? modeA : modeB;
-    const labelMode = mode === "sip" ? "SIP" : mode === "fd" ? "FD" : "Lumpsum";
-    const amount = which === "A" ? amtA : amtB;
-    const yrs = which === "A" ? yrsA : yrsB;
-    const rt = which === "A" ? rA : rB;
-    return `My ${labelMode} of ${formatCurrency(amount)} for ${yrs} yrs at ${rt}% could become ${formatCurrency(res.totalValue)} 🚀. Try the SIPGenie calculator: https://sipgenie.in`;
-  };
-
-  const shareTwitter = (which: "A" | "B" | "both" = "A") => {
-    const text = which === "both" ? `${shareTextFor("A")} \n\nVS\n\n ${shareTextFor("B")}` : shareTextFor(which as "A" | "B");
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank");
-  };
-  const shareWhatsApp = (which: "A" | "B" | "both" = "A") => {
-    const text = which === "both" ? `${shareTextFor("A")} \n\nVS\n\n ${shareTextFor("B")}` : shareTextFor(which as "A" | "B");
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-  };
-
-  /* ---------- PDF Export (polished) ----------
-     Will include both scenarios if compareOpen===true
-  */
+  /** ---------- PDF Export (polished, 2 pages) ---------- */
   const downloadPDF = async () => {
     const container = document.getElementById("pdf-export-section");
     if (!container) {
@@ -333,457 +246,456 @@ export default function SIPCalculator() {
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 10;
 
-    // Top header
+    // Page 1: Header + full content capture
+    const headerY = margin + 6;
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(16);
-    pdf.text("SIPGenie — Investment Report", margin, 18);
+    pdf.text("SIPGenie — Investment Report", margin, headerY);
 
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    pdf.text(`Date: ${new Date().toLocaleDateString()}`, margin, 24);
-    pdf.text("https://sipgenie.in", pageWidth - margin - 50, 24);
+    pdf.setFontSize(11);
+    const modeLabel = mode === "sip" ? "SIP" : mode === "fd" ? "Fixed Deposit (Quarterly)" : "Lumpsum";
+    pdf.text(
+      `Mode: ${modeLabel} • Date: ${new Date().toLocaleDateString()}`,
+      margin,
+      headerY + 6
+    );
 
-    // screenshot the visual part (cards + charts)
     const canvas = await html2canvas(container, { useCORS: true, scale: 2, backgroundColor: "#ffffff" });
     const imgData = canvas.toDataURL("image/png");
 
     const maxW = pageWidth - margin * 2;
-    const maxH = pageHeight - 40;
+    const maxH = pageHeight - margin * 2 - 16; // leave space for header
     const ratio = Math.min(maxW / canvas.width, maxH / canvas.height);
     const imgW = canvas.width * ratio;
     const imgH = canvas.height * ratio;
 
-    pdf.addImage(imgData, "PNG", margin, 28, imgW, imgH);
+    const imgX = margin;
+    const imgY = headerY + 10;
 
-    // Page 2: Summary tables for A and optionally B
+    pdf.addImage(imgData, "PNG", imgX, imgY, imgW, imgH);
+
+    // Page 2: Key metrics "table"
     pdf.addPage();
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(14);
-    pdf.text("Summary", margin, 18);
+    pdf.setFontSize(15);
+    pdf.text("Investment Summary", margin, 20);
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(11);
 
-    // Helper to render a scenario block
-    const renderScenarioSummary = (startY: number, title: string, mode: CalculatorMode, amt: number, rt: number, yrs: number, stp: number, res: CalculationResult) => {
-      let y = startY;
+    const lines: Array<[string, string]> = [
+      ["Mode", modeLabel],
+      [mode === "sip" ? "Monthly Investment" : "Investment Amount", formatCurrency(amount)],
+      ["Expected Return (p.a.)", `${rate}%`],
+      ["Time Horizon", `${years} years`],
+      ...(mode === "sip" ? [["Annual Step-up", `${stepUpPercent}%`]] : []),
+      ["Total Invested", formatCurrency(results.investedAmount)],
+      ["Estimated Returns", formatCurrency(results.estimatedReturns)],
+      ["Expected Wealth", formatCurrency(results.totalValue)],
+    ];
+
+    // simple table layout
+    const col1X = margin;
+    const col2X = margin + 70;
+    let rowY = 32;
+
+    lines.forEach(([k, v]) => {
       pdf.setFont("helvetica", "bold");
-      pdf.text(title, margin, y);
-      y += 6;
+      pdf.text(k, col1X, rowY);
       pdf.setFont("helvetica", "normal");
-      pdf.text(`Mode: ${mode === "sip" ? "SIP" : mode === "fd" ? "Fixed Deposit (Quarterly)" : "Lumpsum"}`, margin, y);
-      y += 6;
-      pdf.text(`${mode === "sip" ? "Monthly Investment" : "Investment Amount"}: ${formatCurrency(amt)}`, margin, y);
-      y += 6;
-      pdf.text(`Expected Rate (p.a.): ${rt}%`, margin, y);
-      y += 6;
-      pdf.text(`Tenure: ${yrs} years`, margin, y);
-      y += 6;
-      if (mode === "sip") {
-        pdf.text(`Annual Step-up: ${stp}%`, margin, y);
-        y += 6;
-      }
-      pdf.text(`Total Invested: ${formatCurrency(res.investedAmount)}`, margin, y);
-      y += 6;
-      pdf.text(`Estimated Returns: ${formatCurrency(res.estimatedReturns)}`, margin, y);
-      y += 6;
-      pdf.text(`Expected Wealth: ${formatCurrency(res.totalValue)}`, margin, y);
-      return y;
-    };
+      pdf.text(v, col2X, rowY);
+      rowY += 8;
+    });
 
-    let curY = 26;
-    curY = renderScenarioSummary(curY, "Scenario A", modeA, amtA, rA, yrsA, stpA, resultsA) + 8;
-
-    if (compareOpen) {
-      curY = renderScenarioSummary(curY, "Scenario B", modeB, amtB, rB, yrsB, stpB, resultsB) + 8;
+    // FD note
+    if (mode === "fd") {
+      rowY += 4;
+      pdf.setFontSize(10);
+      pdf.text(
+        "Note: FD returns are computed with quarterly compounding, a common practice in India.",
+        margin,
+        rowY
+      );
+      rowY += 8;
     }
 
-    // Footer
-    pdf.setFontSize(9);
-    pdf.text("Disclaimer: Calculations are estimates only and not investment advice.", margin, pageHeight - 16);
-    pdf.save(`SIPGenie_Report_${new Date().toISOString().split("T")[0]}.pdf`);
+    // Footer & site
+    pdf.setFontSize(10);
+    pdf.text("Disclaimer: Estimates only. Markets carry risk. Past performance is not indicative of future results.", margin, pageHeight - 18);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("https://sipgenie.in", margin, pageHeight - 10);
+
+    pdf.save(`SIPGenie_Investment_Report_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
-  /* ---------- Utility: copy A -> B ---------- */
-  const copyAToB = () => {
-    setModeB(modeA);
-    setAmountB(amountA);
-    setRateB(rateA);
-    setYearsB(yearsA);
-    setStepB(stepA);
-  };
-
-  /* ---------- Pre-filled examples (A) ---------- */
-  const presets = [
-    { label: "₹5k / 15 yrs", amount: "5000", rate: "12", years: "15", step: "8", mode: "sip" as CalculatorMode },
-    { label: "₹10k / 20 yrs", amount: "10000", rate: "12", years: "20", step: "10", mode: "sip" as CalculatorMode },
-    { label: "₹25k / 10 yrs", amount: "25000", rate: "12", years: "10", step: "5", mode: "sip" as CalculatorMode },
-    { label: "FD ₹1L / 5 yrs", amount: "100000", rate: "7", years: "5", step: "0", mode: "fd" as CalculatorMode },
-  ];
-
-  /* ---------- Render UI ---------- */
   return (
-    <div id="calculatorRoot" className="space-y-6">
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Left: Primary Inputs (A) plus presets */}
-        <div className="lg:col-span-2">
-          <Card className="p-6">
-            <CardContent>
-              <div className="flex items-center justify-between mb-4">
-                <div className="font-bold text-xl">SIPGenie — Calculator</div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    className={`px-3 py-1 rounded ${compareOpen ? "bg-gray-200" : "bg-white"} border`}
-                    onClick={() => setCompareOpen(!compareOpen)}
-                    title="Compare scenarios"
-                  >
-                    {compareOpen ? "Comparing: ON" : "Compare scenarios"}
-                  </button>
-                  <Button variant="ghost" onClick={() => { /* no-op placeholder */ }}><FileText /></Button>
-                </div>
+    <div id="calculatorRoot" className="grid lg:grid-cols-3 gap-8">
+      {/* Left: Inputs */}
+      <div className="lg:col-span-2">
+        <Card className="calculator-shadow animate-slide-up">
+          <CardContent className="p-8">
+            {/* Mode toggle */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-gray-100 p-1 rounded-xl flex">
+                <Button
+                  variant={mode === "sip" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setMode("sip")}
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    mode === "sip" ? "bg-white text-[hsl(224,71.4%,4.1%)] shadow-sm" : "text-gray-600 hover:text-[hsl(224,71.4%,4.1%)]"
+                  }`}
+                  data-testid="button-mode-sip"
+                >
+                  SIP
+                </Button>
+                <Button
+                  variant={mode === "lumpsum" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setMode("lumpsum")}
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    mode === "lumpsum" ? "bg-white text-[hsl(224,71.4%,4.1%)] shadow-sm" : "text-gray-600 hover:text-[hsl(224,71.4%,4.1%)]"
+                  }`}
+                  data-testid="button-mode-lumpsum"
+                >
+                  Lumpsum
+                </Button>
+                <Button
+                  variant={mode === "fd" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setMode("fd")}
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    mode === "fd" ? "bg-white text-[hsl(224,71.4%,4.1%)] shadow-sm" : "text-gray-600 hover:text-[hsl(224,71.4%,4.1%)]"
+                  }`}
+                  data-testid="button-mode-fd"
+                >
+                  FD
+                </Button>
               </div>
+            </div>
 
-              {/* Mode toggle A */}
-              <div className="mb-4">
-                <div className="inline-flex rounded-lg bg-gray-100 p-1">
-                  <button
-                    className={`px-4 py-2 rounded ${modeA === "sip" ? "bg-white shadow" : ""}`}
-                    onClick={() => setModeA("sip")}
-                  >
-                    SIP
-                  </button>
-                  <button
-                    className={`px-4 py-2 rounded ${modeA === "lumpsum" ? "bg-white shadow" : ""}`}
-                    onClick={() => setModeA("lumpsum")}
-                  >
-                    Lumpsum
-                  </button>
-                  <button
-                    className={`px-4 py-2 rounded ${modeA === "fd" ? "bg-white shadow" : ""}`}
-                    onClick={() => setModeA("fd")}
-                  >
-                    FD
-                  </button>
-                </div>
-              </div>
-
-              {/* Inputs grid */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Left column: amount / rate / years */}
-                <div>
-                  {/* Amount */}
-                  <div className="mb-4">
-                    <Label> {modeA === "sip" ? "Monthly investment" : "Investment amount"} </Label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">₹</div>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        value={amountA}
-                        onChange={(e) => setAmountA(e.target.value.replace(/[^\d.]/g, ""))}
-                        onBlur={onAmountABlur}
-                        className="pl-8"
-                        placeholder="e.g. 25000"
-                      />
-                    </div>
-                    <input
-                      id="amountSliderA"
-                      type="range"
-                      min={500}
-                      max={100000}
-                      value={clamp(amtA || 0, 500, 100000)}
-                      onChange={(e) => setAmountA(String(parseInt(e.target.value, 10)))}
-                      className="w-full mt-3"
-                    />
+            <div className="space-y-8">
+              {/* Amount */}
+              <div className="group">
+                <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
+                  {mode === "sip" ? "Monthly investment" : "Investment amount"}
+                </Label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">
+                    ₹
                   </div>
+                  <Input
+                    inputMode="numeric"
+                    type="text"
+                    value={amountInput}
+                    onChange={(e) => setAmountInput(e.target.value.replace(/[^\d.]/g, ""))}
+                    onBlur={onAmountBlur}
+                    placeholder="e.g. 25000"
+                    className="pl-8 pr-4 py-4 text-lg font-medium bg-gray-50 focus:bg-white focus:border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                    data-testid="input-monthly-amount"
+                  />
+                  <div className="mt-2 flex justify-between text-sm text-[hsl(220,8.9%,46.1%)]">
+                    <span>Min: ₹500</span>
+                    <span>Max: ₹1 Cr</span>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    id="amountSlider"
+                    min={500}
+                    max={100000}
+                    value={clamp(amount || 0, 500, 100000)}
+                    onChange={(e) => setAmountInput(String(parseInt(e.target.value, 10)))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                    data-testid="slider-amount"
+                  />
+                </div>
+              </div>
 
-                  {/* Rate */}
-                  <div className="mb-4">
-                    <Label> Expected return rate (p.a) </Label>
+              {/* Rate */}
+              <div className="group">
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)]">
+                    Expected return rate (p.a)
+                  </Label>
+                  {mode === "fd" && (
+                    <span className="text-xs text-[hsl(220,8.9%,46.1%)]">
+                      Compounding: <b>Quarterly</b> (FD standard)
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    inputMode="decimal"
+                    type="text"
+                    value={rateInput}
+                    onChange={(e) => setRateInput(e.target.value.replace(/[^\d.]/g, ""))}
+                    onBlur={onRateBlur}
+                    placeholder="e.g. 12"
+                    className="pr-10 pl-4 py-4 text-lg font-medium bg-gray-50 focus:bg-white focus:border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                    data-testid="input-return-rate"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">
+                    %
+                  </div>
+                  <div className="mt-2 flex justify-between text-sm text-[hsl(220,8.9%,46.1%)]">
+                    <span>Conservative: 8–10%</span>
+                    <span>Aggressive: 12–15%</span>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    id="returnSlider"
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={clamp(rate || 0, 1, 30)}
+                    onChange={(e) => setRateInput(String(parseInt(e.target.value, 10)))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                    data-testid="slider-return-rate"
+                  />
+                </div>
+              </div>
+
+              {/* Years */}
+              <div className="group">
+                <Label className="block text-sm font medium text-[hsl(224,71.4%,4.1%)] mb-3">
+                  Time period
+                </Label>
+                <div className="relative">
+                  <Input
+                    inputMode="numeric"
+                    type="text"
+                    value={yearsInput}
+                    onChange={(e) => setYearsInput(e.target.value.replace(/[^\d]/g, ""))}
+                    onBlur={onYearsBlur}
+                    placeholder="e.g. 10"
+                    className="pr-16 pl-4 py-4 text-lg font-medium bg-gray-50 focus:bg-white focus:border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                    data-testid="input-time-period"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">
+                    Years
+                  </div>
+                  <div className="mt-2 flex justify-between text-sm text-[hsl(220,8.9%,46.1%)]">
+                    <span>Short term: 1–3 years</span>
+                    <span>Long term: 10+ years</span>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    id="timeSlider"
+                    min={1}
+                    max={40}
+                    value={clamp(years || 0, 1, 40)}
+                    onChange={(e) => setYearsInput(String(parseInt(e.target.value, 10)))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                    data-testid="slider-time-period"
+                  />
+                </div>
+              </div>
+
+              {/* Step-up (SIP only) */}
+              {mode === "sip" && (
+                <div className="group">
+                  <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-3">
+                    Annual Step-up (%) — increase your SIP yearly
+                  </Label>
+                  <div className="relative">
                     <Input
-                      type="text"
                       inputMode="decimal"
-                      value={rateA}
-                      onChange={(e) => setRateA(e.target.value.replace(/[^\d.]/g, ""))}
-                      onBlur={onRateABlur}
-                      placeholder="e.g. 12"
-                    />
-                    <input
-                      id="returnSliderA"
-                      type="range"
-                      min={1}
-                      max={30}
-                      value={clamp(rA || 0, 1, 30)}
-                      onChange={(e) => setRateA(String(parseInt(e.target.value, 10)))}
-                      className="w-full mt-3"
-                    />
-                    {modeA === "fd" && (
-                      <div className="text-xs mt-1 text-gray-600">FD compounding: quarterly (typical in India)</div>
-                    )}
-                  </div>
-
-                  {/* Years */}
-                  <div>
-                    <Label> Time period (years) </Label>
-                    <Input
                       type="text"
-                      inputMode="numeric"
-                      value={yearsA}
-                      onChange={(e) => setYearsA(e.target.value.replace(/[^\d]/g, ""))}
-                      onBlur={onYearsABlur}
+                      value={stepInput}
+                      onChange={(e) => setStepInput(e.target.value.replace(/[^\d.]/g, ""))}
+                      onBlur={onStepBlur}
                       placeholder="e.g. 10"
+                      className="pr-12 pl-4 py-4 text-lg font-medium border-[hsl(162,100%,41%)] group-hover:border-gray-300 input-focus"
+                      data-testid="input-stepup-percent"
                     />
-                    <input
-                      id="timeSliderA"
-                      type="range"
-                      min={1}
-                      max={40}
-                      value={clamp(yrsA || 0, 1, 40)}
-                      onChange={(e) => setYearsA(String(parseInt(e.target.value, 10)))}
-                      className="w-full mt-3"
-                    />
-                  </div>
-                </div>
-
-                {/* Right column: step-up (if SIP) + goal + presets */}
-                <div>
-                  {modeA === "sip" && (
-                    <div className="mb-4">
-                      <Label>Annual Step-up (%)</Label>
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        value={stepA}
-                        onChange={(e) => setStepA(e.target.value.replace(/[^\d.]/g, ""))}
-                        onBlur={onStepABlur}
-                        placeholder="e.g. 10"
-                      />
+                    <div className="mt-2">
                       <input
-                        id="stepUpSliderA"
                         type="range"
+                        id="stepUpSlider"
                         min={0}
                         max={30}
-                        value={clamp(stpA || 0, 0, 30)}
-                        onChange={(e) => setStepA(String(parseInt(e.target.value, 10)))}
-                        className="w-full mt-3"
+                        step={1}
+                        value={clamp(stepUpPercent || 0, 0, 30)}
+                        onChange={(e) => setStepInput(String(parseInt(e.target.value, 10)))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none slider"
+                        data-testid="slider-stepup"
                       />
-                    </div>
-                  )}
-
-                  {/* Investment Goal */}
-                  <div className="mb-4">
-                    <Label>Target wealth goal (for SIP)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        value={goalInput}
-                        onChange={(e) => setGoalInput(e.target.value.replace(/[^\d.]/g, ""))}
-                        placeholder="e.g. 10000000"
-                      />
-                      <div className="flex items-center text-sm text-gray-700">
-                        {modeA === "sip" ? (
-                          goalYearsResult ? (
-                            <span>
-                              ~{goalYearsResult} yrs to reach {formatCurrency(toNumber(goalInput, 0))}
-                            </span>
-                          ) : (
-                            <span>Not reachable in 60 yrs with current SIP</span>
-                          )
-                        ) : (
-                          <span className="text-xs">Goal estimation is for SIP only</span>
-                        )}
+                      <div className="flex justify-between text-sm text-[hsl(220,8.9%,46.1%)] mt-2">
+                        <span>0%</span>
+                        <span>30%</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Presets */}
-                  <div className="mb-4">
-                    <Label>Quick examples</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {presets.map((p) => (
-                        <button
-                          key={p.label}
-                          className="px-3 py-1 rounded bg-gray-100"
-                          onClick={() => {
-                            setModeA(p.mode);
-                            setAmountA(p.amount);
-                            setRateA(p.rate);
-                            setYearsA(p.years);
-                            setStepA(p.step);
-                          }}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
+                  {/* Investment Goal (SIP only) */}
+                  <div className="mt-6">
+                    <Label className="block text-sm font-medium text-[hsl(224,71.4%,4.1%)] mb-2">
+                      Target wealth goal (estimate years to reach)
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[hsl(220,8.9%,46.1%)] font-medium">
+                        ₹
+                      </div>
+                      <Input
+                        inputMode="numeric"
+                        type="text"
+                        value={goalInput}
+                        onChange={(e) => setGoalInput(e.target.value.replace(/[^\d.]/g, ""))}
+                        onBlur={onGoalBlur}
+                        placeholder="e.g. 10000000"
+                        className="pl-8 pr-4 py-3 text-lg bg-gray-50"
+                      />
+                    </div>
+                    <div className="mt-3 text-sm text-[hsl(220,8.9%,46.1%)]">
+                      {goalYearsResult ? (
+                        <span>
+                          ~{goalYearsResult} years to reach {formatCurrency(goalValue)} with current inputs.
+                        </span>
+                      ) : (
+                        <span>Goal not reachable within 60 years with current SIP (or input is empty).</span>
+                      )}
                     </div>
                   </div>
-
-                  {/* Copy to B (if compare) */}
-                  {compareOpen && (
-                    <div className="mt-2">
-                      <button
-                        className="px-3 py-2 bg-blue-600 text-white rounded"
-                        onClick={copyAToB}
-                      >
-                        Copy A → B
-                      </button>
-                    </div>
-                  )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right column: Results and actions (A & optionally B) */}
-        <div>
-          <Card className="p-4 mb-4">
-            <CardContent>
-              <h3 className="font-semibold mb-3">Scenario A Summary</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Invested amount</span>
-                  <strong>{formatCurrency(resultsA.investedAmount)}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>{modeA === "fd" ? "Accrued interest" : "Estimated returns"}</span>
-                  <strong>{formatCurrency(resultsA.estimatedReturns)}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total value</span>
-                  <strong>{formatCurrency(resultsA.totalValue)}</strong>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <Button variant="outline" onClick={() => downloadPDF()}>
-                  <Download className="inline-block mr-2" /> Download PDF
-                </Button>
-                <div className="flex gap-2 mt-2">
-                  <Button onClick={() => downloadCSV("A")}><FileText className="inline mr-2" />Export CSV</Button>
-                  <Button onClick={() => shareTwitter("A")}><Share2 className="inline mr-2" />Share (Twitter)</Button>
-                  <Button onClick={() => shareWhatsApp("A")}>WhatsApp</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* If comparing, show Scenario B summary + actions */}
-          {compareOpen && (
-            <Card className="p-4">
-              <CardContent>
-                <h3 className="font-semibold mb-3">Scenario B Summary</h3>
-
-                {/* Mode toggle for B */}
-                <div className="inline-flex rounded-lg bg-gray-100 p-1 mb-3">
-                  <button className={`px-3 py-1 rounded ${modeB === "sip" ? "bg-white" : ""}`} onClick={() => setModeB("sip")}>SIP</button>
-                  <button className={`px-3 py-1 rounded ${modeB === "lumpsum" ? "bg-white" : ""}`} onClick={() => setModeB("lumpsum")}>Lumpsum</button>
-                  <button className={`px-3 py-1 rounded ${modeB === "fd" ? "bg-white" : ""}`} onClick={() => setModeB("fd")}>FD</button>
-                </div>
-
-                <div className="text-sm text-gray-700 mb-2">
-                  Enter B values:
-                </div>
-
-                <div className="space-y-2 mb-3">
-                  <Input type="text" value={amountB} onChange={(e) => setAmountB(e.target.value.replace(/[^\d.]/g, ""))} onBlur={onAmountBBlur} placeholder="Investment amount" />
-                  <Input type="text" value={rateB} onChange={(e) => setRateB(e.target.value.replace(/[^\d.]/g, ""))} onBlur={onRateBBlur} placeholder="Rate (p.a.)" />
-                  <Input type="text" value={yearsB} onChange={(e) => setYearsB(e.target.value.replace(/[^\d]/g, ""))} onBlur={onYearsBBlur} placeholder="Years" />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={() => downloadCSV("B")}><FileText className="inline mr-2" />Export CSV</Button>
-                  <Button onClick={() => shareTwitter("both")}><Share2 className="inline mr-2" />Share Compare</Button>
-                </div>
-
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Charts / Breakdown */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="p-4">
-          <CardContent>
-            <h4 className="font-semibold mb-3">Scenario A — Growth Over Time</h4>
-            <GrowthChart data={resultsA.yearlyData} />
-          </CardContent>
-        </Card>
-
-        <Card className="p-4">
-          <CardContent>
-            <h4 className="font-semibold mb-3">Scenario A — Investment Breakdown</h4>
-            <InvestmentChart investedAmount={resultsA.investedAmount} estimatedReturns={resultsA.estimatedReturns} />
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {compareOpen && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="p-4">
-            <CardContent>
-              <h4 className="font-semibold mb-3">Scenario B — Growth Over Time</h4>
-              <GrowthChart data={resultsB.yearlyData} />
-            </CardContent>
-          </Card>
+      {/* Right: Results summary + buttons */}
+      <div className="space-y-6" id="pdf-export-section">
+        <Card className="calculator-shadow animate-slide-up">
+          <CardContent className="p-6">
+            <h3
+              className="text-lg font-semibold text-[hsl(224,71.4%,4.1%)] mb-6"
+              data-testid="text-investment-summary"
+            >
+              Investment Summary
+            </h3>
 
-          <Card className="p-4">
-            <CardContent>
-              <h4 className="font-semibold mb-3">Scenario B — Investment Breakdown</h4>
-              <InvestmentChart investedAmount={resultsB.investedAmount} estimatedReturns={resultsB.estimatedReturns} />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* SEO FAQ & CTAs */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="p-4">
-          <CardContent>
-            <h3 className="font-semibold mb-3">FAQ — Quick Answers</h3>
-            <details className="mb-2">
-              <summary className="font-medium">Is SIP better than FD?</summary>
-              <div className="mt-2 text-sm text-gray-700">
-                SIP (equity SIP) offers potentially higher long-term returns but with market risk. FD gives guaranteed returns but usually lower than inflation-busting equity returns. Use both for a balanced strategy.
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                <span className="text-sm text-[hsl(220,8.9%,46.1%)]">Invested amount</span>
+                <span
+                  className="font-semibold text-[hsl(224,71.4%,4.1%)]"
+                  data-testid="text-invested-amount"
+                >
+                  {formatCurrency(results.investedAmount)}
+                </span>
               </div>
-            </details>
 
-            <details className="mb-2">
-              <summary className="font-medium">Can SIP make me a millionaire?</summary>
-              <div className="mt-2 text-sm text-gray-700">
-                Yes — with discipline and time. Regular SIPs compounded over long horizons can build substantial wealth. Use the goal calculator above to estimate years.
+              <div className="flex justify-between items-center p-4 bg-[hsl(162,100%,41%)]/5 rounded-xl">
+                <span className="text-sm text-[hsl(220,8.9%,46.1%)]">Estimated returns</span>
+                <span
+                  className="font-semibold text-[hsl(162,100%,41%)]"
+                  data-testid="text-estimated-returns"
+                >
+                  {formatCurrency(results.estimatedReturns)}
+                </span>
               </div>
-            </details>
 
-            <details className="mb-2">
-              <summary className="font-medium">What is step-up SIP?</summary>
-              <div className="mt-2 text-sm text-gray-700">
-                Step-up SIP increases your monthly SIP by a chosen percent each year automatically — good for increasing investments as income grows.
+              <div className="flex justify-between items-center p-4 bg-[hsl(207,90%,54%)]/5 rounded-xl border-2 border-[hsl(207,90%,54%)]/20">
+                <span className="text-sm font-medium text-[hsl(224,71.4%,4.1%)]">Total value</span>
+                <span
+                  className="text-xl font-bold text-[hsl(207,90%,54%)]"
+                  data-testid="text-total-value"
+                >
+                  {formatCurrency(results.totalValue)}
+                </span>
               </div>
-            </details>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 mt-6">
+              <Button
+                variant="outline"
+                className="bg-gradient-to-r from-[hsl(162,100%,41%)] to-[hsl(207,90%,54%)] text-white py-4 rounded-xl font-semibold text-lg hover:shadow-xl transition-all transform hover:scale-105"
+                onClick={downloadPDF}
+                data-testid="button-download-pdf"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                DOWNLOAD PDF
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="p-4">
-          <CardContent>
-            <h3 className="font-semibold mb-3">Quick Tips</h3>
-            <ul className="list-disc ml-5 text-sm text-gray-700">
-              <li>Try presets to see examples quickly.</li>
-              <li>Use Compare to test SIP vs FD or different SIP step-ups.</li>
-              <li>Export CSV for deeper offline analysis.</li>
-              <li>Share results to social media to drive more visits.</li>
-            </ul>
+        {/* Investment breakdown (Pie) */}
+        <Card className="calculator-shadow animate-slide-up">
+          <CardContent className="p-6">
+            <h3
+              className="text-lg font-semibold text-[hsl(224,71.4%,4.1%)] mb-4"
+              data-testid="text-investment-breakdown"
+            >
+              Investment Breakdown
+            </h3>
+            <InvestmentChart
+              investedAmount={results.investedAmount}
+              estimatedReturns={results.estimatedReturns}
+            />
           </CardContent>
         </Card>
       </div>
 
       {/* Disclaimer */}
-      <div>
-        <p className="text-sm text-center italic text-red-600">
-          * Investments are subject to market risks and results from this calculator are estimates only and not guarantees.
+      <div className="lg:col-span-3">
+        <p
+          className="text-lg lg:text-xl font-semibold text-[hsl(224,71.4%,4.1%)] mb-4 italic text-center text-red-50"
+          style={{ fontStyle: "italic", color: "red" }}
+        >
+          * Investments are subject to market risks and results from this calculator are estimates
+          only and not guarantees; past performance is not indicative of future results.
         </p>
+      </div>
+
+      {/* Growth chart + Related calculators */}
+      <div className="lg:col-span-3 mt-8" id="growth-chart-section">
+        <div className="text-center mb-12">
+          <h2
+            className="text-3xl font-bold text-[hsl(224,71.4%,4.1%)] mb-4"
+            data-testid="text-growth-title"
+          >
+            Investment Growth Over Time
+          </h2>
+          <p className="text-[hsl(220,8.9%,46.1%)]">See how your investment grows year by year</p>
+        </div>
+        <Card className="bg-[hsl(220,14.3%,97%)] calculator-shadow">
+          <CardContent className="p-8">
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <GrowthChart data={results.yearlyData} />
+              </div>
+              <aside className="md:col-span-1">
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <h4 className="text-lg font-semibold mb-3">Related Calculators</h4>
+                  <ul className="space-y-2 text-[hsl(220,8.9%,46.1%)]">
+                    <li>
+                      <a href="/ppf" className="text-[hsl(162,100%,41%)] hover:underline">
+                        PPF Calculator
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/goal-calculator" className="text-[hsl(162,100%,41%)] hover:underline">
+                        Goal Calculator
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/sip-vs-lumpsum" className="text-[hsl(162,100%,41%)] hover:underline">
+                        SIP vs Lumpsum
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </aside>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
