@@ -10,7 +10,7 @@ import InvestmentChart from "./investment-chart";
 import GrowthChart from "./growth-chart";
 
 /* ---------- Types ---------- */
-type CalculatorMode = "sip" | "lumpsum" | "fd";
+type CalculatorMode = "sip" | "fd";
 
 interface CalculationResult {
   investedAmount: number;
@@ -21,6 +21,7 @@ interface CalculationResult {
 
 /* ---------- Helpers ---------- */
 const toNumber = (v: string, fallback = 0) => {
+  if (v === "") return fallback; // backspace fix
   const n = parseFloat(v);
   return Number.isFinite(n) ? n : fallback;
 };
@@ -86,7 +87,7 @@ const calculateFD = (
   rate: number,
   years: number
 ): CalculationResult => {
-  const m = 4;
+  const m = 4; // quarterly compounding
   const r = rate / 100;
   const n = years * m;
   const periodRate = r / m;
@@ -157,14 +158,7 @@ export default function SIPCalculator() {
       let res: CalculationResult;
       if (mode === "sip")
         res = calculateSIP(amount, rate, years, stepUpPercent);
-      else if (mode === "fd") res = calculateFD(amount, rate, years);
-      else
-        res = {
-          investedAmount: 0,
-          estimatedReturns: 0,
-          totalValue: 0,
-          yearlyData: [],
-        };
+      else res = calculateFD(amount, rate, years);
       setResults(res);
     }
 
@@ -250,8 +244,112 @@ export default function SIPCalculator() {
               </Button>
             </div>
 
-            {/* Inputs remain same (Amount, Rate, Years, StepUp) */}
-            {/* ... reuse your input JSX here from old code ... */}
+            <div className="space-y-8">
+              {/* Investment Amount */}
+              <div className="group">
+                <Label className="block text-sm font-medium mb-3">
+                  {mode === "sip" ? "Monthly Investment" : "Investment Amount"}
+                </Label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2">₹</div>
+                  <Input
+                    type="number"
+                    value={amountInput}
+                    onChange={(e) => setAmountInput(e.target.value)}
+                    placeholder="Enter amount"
+                    className="pl-8"
+                  />
+                </div>
+                <input
+                  type="range"
+                  id="amountSlider"
+                  min={500}
+                  max={100000}
+                  value={amount}
+                  onChange={(e) => setAmountInput(e.target.value)}
+                  className="w-full mt-2"
+                />
+              </div>
+
+              {/* Return Rate */}
+              <div className="group">
+                <Label className="block text-sm font-medium mb-3">
+                  Expected return rate (p.a)
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={rateInput}
+                    onChange={(e) => setRateInput(e.target.value)}
+                    placeholder="Enter %"
+                    className="pr-8"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">%</div>
+                </div>
+                <input
+                  type="range"
+                  id="returnSlider"
+                  min={1}
+                  max={30}
+                  step={0.5}
+                  value={rate}
+                  onChange={(e) => setRateInput(e.target.value)}
+                  className="w-full mt-2"
+                />
+              </div>
+
+              {/* Time Period */}
+              <div className="group">
+                <Label className="block text-sm font-medium mb-3">
+                  Time period
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={yearsInput}
+                    onChange={(e) => setYearsInput(e.target.value)}
+                    placeholder="Years"
+                    className="pr-12"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    Years
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="timeSlider"
+                  min={1}
+                  max={40}
+                  value={years}
+                  onChange={(e) => setYearsInput(e.target.value)}
+                  className="w-full mt-2"
+                />
+              </div>
+
+              {/* Step-Up SIP */}
+              {mode === "sip" && (
+                <div className="group">
+                  <Label className="block text-sm font-medium mb-3">
+                    Annual Step-up (%)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={stepInput}
+                    onChange={(e) => setStepInput(e.target.value)}
+                  />
+                  <input
+                    type="range"
+                    id="stepUpSlider"
+                    min={0}
+                    max={30}
+                    step={0.1}
+                    value={stepUpPercent}
+                    onChange={(e) => setStepInput(e.target.value)}
+                    className="w-full mt-2"
+                  />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
