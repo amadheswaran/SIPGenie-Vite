@@ -137,12 +137,11 @@
     <div class="brand">
       <a href="https://sipgenie.in/">
         <img src="/sipgenie-logo.png" alt="SIPGenie logo" />
-        <span style="font-weight:800;font-size:1rem">SIPGenie</span>
       </a>
     </div>
 
     <nav>
-      <a href="/sip-calculator">Calculator</a>
+      <a href="/">Calculator</a>
       <a href="/compare.html">Compare</a>
       <a href="/blog/index.html">Blog</a>
     </nav>
@@ -161,7 +160,7 @@
         <a class="share-btn" href="https://twitter.com/intent/tweet?text=Read%20this%20SIP%20vs%20FD%20guide%20(%F0%9F%92%B0)%20-%20%20SIPGenie%20https%3A%2F%2Fsipgenie.in%2Fblog%2Fsip-vs-fixed-deposit.html" target="_blank" rel="noopener">Share on Twitter</a>
         <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https://sipgenie.in/blog/sip-vs-fixed-deposit.html" target="_blank" rel="noopener">Share on LinkedIn</a>
         <a class="share-btn" href="https://api.whatsapp.com/send?text=SIP%20vs%20FD%20guide%20-%20https://sipgenie.in/blog/sip-vs-fixed-deposit.html" target="_blank" rel="noopener">Share on WhatsApp</a>
-        <a class="cta" href="/sip-calculator">Try the SIP Calculator</a>
+        <a class="cta" href="/">Try the SIP Calculator</a>
       </div>
     </div>
   </section>
@@ -219,7 +218,7 @@
     <div class="note" role="note">
       <strong>Pro tip:</strong> Combine both. Park 6–12 months of emergency funds in FDs / liquid debt, then invest the rest in SIPs for long-term goals. This gives safety + growth in one plan.
       <br />
-      <a class="cta" href="/sip-calculator" title="Open SIP Calculator">Plan with the SIP Calculator →</a>
+      <a class="cta" href="/" title="Open SIP Calculator">Plan with the SIP Calculator →</a>
     </div>
 
     <h2>When to choose SIP vs FD — a quick decision framework</h2>
@@ -252,7 +251,7 @@
 
     <h2>Want to test numbers yourself?</h2>
     <p>
-      Try real scenarios in our calculator: <a class="cta" href="/sip-calculator">Open SIP Calculator</a>
+      Try real scenarios in our calculator: <a class="cta" href="/">Open SIP Calculator</a>
     </p>
 
     <h2>Related articles</h2>
@@ -275,7 +274,7 @@
     <div style="margin-top:22px;padding:14px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(2,6,23,0.04)">
       <p style="margin:0 0 8px 0"><strong>Disclaimer:</strong> This article is educational only and not investment advice. Consult a qualified financial advisor before making investment decisions.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a class="cta" href="/sip-calculator">Calculate my SIP</a>
+        <a class="cta" href="/">Calculate my SIP</a>
         <a class="share-btn" href="https://twitter.com/intent/tweet?text=I%20just%20read%20a%20clear%20SIP%20vs%20FD%20guide%20on%20SIPGenie%20-%20check%20it%20out%20https://sipgenie.in/blog/sip-vs-fixed-deposit.html" target="_blank" rel="noopener">Tweet this</a>
       </div>
     </div>
@@ -322,7 +321,7 @@
     document.querySelectorAll('a.cta').forEach(a => {
       a.addEventListener('click', (ev) => {
         const href = a.getAttribute('href') || '';
-        if (href.startsWith('/sip-calculator')) {
+        if (href.startsWith('/')) {
           // allow normal navigation for servers; if client-side routing present, this smooth scroll will help
           // fallback: open in same tab
         }
