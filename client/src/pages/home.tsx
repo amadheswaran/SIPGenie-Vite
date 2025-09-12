@@ -108,7 +108,7 @@ export default function Home() {
                 }}
               >
                 <Calculator className="mr-2 h-5 w-5" />
-                Free Calculator
+                FREE SIP Calculator
               </Button>
             </div>
             
